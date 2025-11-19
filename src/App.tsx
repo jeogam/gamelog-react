@@ -7,9 +7,9 @@ import Landing from './pages/Landing'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Sandbox from './pages/Sandbox'
-import Hades from './pages/Hades'
-import Btd6 from './pages/Btd6'          // <--- Novo
-import EldenRing from './pages/EldenRing' // <--- Novo
+import Hades from './pages/jogos/Hades'
+import Btd6 from './pages/jogos/Btd6'          
+import EldenRing from './pages/jogos/EldenRing' 
 
 // Importando as novas atividades
 import Atividade3 from './pages/sandbox/Atividade3'
