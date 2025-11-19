@@ -1,5 +1,5 @@
 // Importamos a imagem que será usada na página
-import hadesPromo from '../assets/images/jogos/hades-promo-art.png'
+import hadesPromo from '../../assets/images/jogos/hades-promo-art.png'
 
 function Hades() {
   return (

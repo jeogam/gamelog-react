@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import PasswordGate from './components/PasswordGate'
 
 import Landing from './pages/Landing'
 import Home from './pages/Home'
@@ -15,6 +16,7 @@ import EldenRing from './pages/jogos/EldenRing'
 import Atividade3 from './pages/sandbox/Atividade3'
 import Atividade4 from './pages/sandbox/Atividade4'
 import Atividade5 from './pages/sandbox/Atividade5'
+import Admin from './pages/Admin'
 
 function App() {
   return (
@@ -30,9 +32,15 @@ function App() {
           <Route path="/hades" element={<Hades />} />
           <Route path="/btd6" element={<Btd6 />} />
           <Route path="/elden-ring" element={<EldenRing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Admin />} /> 
 
           {/* Rotas do Sandbox */}
-          <Route path="/sandbox" element={<Sandbox />} />
+          <Route path="/sandbox" element={
+            <PasswordGate>
+              <Sandbox />
+            </PasswordGate>
+          } />
           <Route path="/sandbox/atividade-3" element={<Atividade3 />} />
           <Route path="/sandbox/atividade-4" element={<Atividade4 />} />
           <Route path="/sandbox/atividade-5" element={<Atividade5 />} />
