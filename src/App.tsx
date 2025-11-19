@@ -7,7 +7,9 @@ import Landing from './pages/Landing'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Sandbox from './pages/Sandbox'
-import Hades from './pages/Hades' 
+import Hades from './pages/Hades'
+import Btd6 from './pages/Btd6'          // <--- Novo
+import EldenRing from './pages/EldenRing' // <--- Novo
 
 function App() {
   return (
@@ -21,8 +23,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/sandbox" element={<Sandbox />} />
           
-          {/* 2. Adicione a rota aqui */}
-          <Route path="/hades" element={<Hades />} /> 
+          <Route path="/hades" element={<Hades />} />
+          <Route path="/btd6" element={<Btd6 />} />           
+          <Route path="/elden-ring" element={<EldenRing />} /> 
         </Routes>
         
         <Footer /> 
