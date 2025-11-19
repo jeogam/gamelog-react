@@ -11,6 +11,11 @@ import Hades from './pages/Hades'
 import Btd6 from './pages/Btd6'          // <--- Novo
 import EldenRing from './pages/EldenRing' // <--- Novo
 
+// Importando as novas atividades
+import Atividade3 from './pages/sandbox/Atividade3'
+import Atividade4 from './pages/sandbox/Atividade4'
+import Atividade5 from './pages/sandbox/Atividade5'
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,14 +23,19 @@ function App() {
 
       <div className="container">
         <Routes>
+          {/* Rotas existentes... */}
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/sandbox" element={<Sandbox />} />
-          
           <Route path="/hades" element={<Hades />} />
-          <Route path="/btd6" element={<Btd6 />} />           
-          <Route path="/elden-ring" element={<EldenRing />} /> 
+          <Route path="/btd6" element={<Btd6 />} />
+          <Route path="/elden-ring" element={<EldenRing />} />
+
+          {/* Rotas do Sandbox */}
+          <Route path="/sandbox" element={<Sandbox />} />
+          <Route path="/sandbox/atividade-3" element={<Atividade3 />} />
+          <Route path="/sandbox/atividade-4" element={<Atividade4 />} />
+          <Route path="/sandbox/atividade-5" element={<Atividade5 />} />
         </Routes>
         
         <Footer /> 
@@ -33,5 +43,4 @@ function App() {
     </BrowserRouter>
   )
 }
-
 export default App
