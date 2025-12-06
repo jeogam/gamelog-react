@@ -1,11 +1,24 @@
-import { Link } from 'react-router-dom'
+// app/admin/page.tsx
+'use client'
+
+import { useRouter } from 'next/navigation'
 
 function Admin() {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    localStorage.removeItem('gamelog_token')
+    localStorage.removeItem('gamelog_user')
+    router.push('/')
+  }
+
   return (
     <main className="mt-5">
         <div className="d-flex justify-content-between align-items-center mb-3">
             <h1>Painel de Administração</h1>
-            <Link className="btn btn-danger" to="/">Sair</Link>
+            <button className="btn btn-danger" onClick={handleLogout}>
+                Sair
+            </button>
         </div>
         
         <p>Lista de usuários cadastrados no sistema.</p>
@@ -25,14 +38,6 @@ function Admin() {
                         <td data-label="Email">teste@gmail.com</td>
                         <td data-label="Ações">
                             <a href="#" className="btn btn-sm btn-info btn-action edit me-2">Editar</a> 
-                            <a href="#" className="btn btn-sm btn-danger btn-action delete">Excluir</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td data-label="Usuário">Maria Silva</td>
-                        <td data-label="Email">maria@example.com</td>
-                        <td data-label="Ações">
-                            <a href="#" className="btn btn-sm btn-info btn-action edit me-2">Editar</a>
                             <a href="#" className="btn btn-sm btn-danger btn-action delete">Excluir</a>
                         </td>
                     </tr>

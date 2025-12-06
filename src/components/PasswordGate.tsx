@@ -1,8 +1,11 @@
+// src/components/PasswordGate.tsx
+'use client'
+
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 interface PasswordGateProps {
-  children: ReactNode; // O conteúdo que queremos proteger
+  children: ReactNode;
 }
 
 function PasswordGate({ children }: PasswordGateProps) {
@@ -10,7 +13,6 @@ function PasswordGate({ children }: PasswordGateProps) {
   const [liberado, setLiberado] = useState(false)
   const [erro, setErro] = useState(false)
 
-  // Defina sua senha secreta aqui (pode ser qualquer coisa)
   const SENHA_SECRETA = "professor123"
 
   const verificarSenha = (e: React.FormEvent) => {
@@ -20,16 +22,14 @@ function PasswordGate({ children }: PasswordGateProps) {
       setErro(false)
     } else {
       setErro(true)
-      setSenhaDigitada('') // Limpa o campo
+      setSenhaDigitada('')
     }
   }
 
-  // Se já estiver liberado, mostra o conteúdo protegido (a página Sandbox)
   if (liberado) {
     return <>{children}</>
   }
 
-  // Se não, mostra a tela de bloqueio
   return (
     <div className="container mt-5" style={{ maxWidth: '400px' }}>
       <div className="card border-secondary bg-dark text-light">

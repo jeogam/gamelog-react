@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+// app/page.tsx
+
+import Link from 'next/link'
 
 function Landing() {
   return (
@@ -18,7 +20,7 @@ function Landing() {
           <small><em>Nota: Este é atualmente um protótipo visual. Funcionalidades como salvar dados serão implementadas nas próximas fases.</em></small>
         </p>
 
-        <Link className="btn btn-primary btn-lg mt-4" to="/home">
+        <Link className="btn btn-primary btn-lg mt-4" href="/home">
           Explore o Protótipo
         </Link> 
 

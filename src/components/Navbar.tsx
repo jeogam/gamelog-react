@@ -1,13 +1,29 @@
-import { Link } from 'react-router-dom'
+// src/components/Navbar.tsx
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+// import { authService } from '../services/authService' // Mantenha a importação do seu service
 
 function Navbar() {
+  const router = useRouter()
+  
+  // Verifica autenticação usando localStorage (deve ser migrado para Cookies + Middleware)
+  const isAuth = typeof window !== 'undefined' && !!localStorage.getItem('gamelog_token')
+
+  const handleLogout = () => {
+    // authService.logout() 
+    localStorage.removeItem('gamelog_token')
+    localStorage.removeItem('gamelog_user')
+    router.push('/')
+  }
+
   return (
     <header>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div className="container-fluid">
           
-          {/* Link para a Home (Raiz) */}
-          <Link className="navbar-brand logo" to="/">
+          <Link className="navbar-brand logo" href="/">
             🎮 GameLog
           </Link>
 
@@ -25,16 +41,30 @@ function Navbar() {
 
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto">
-              <li className="nav-item d-flex align-items-center">
-                {/* Link para Sandbox */}
-                <Link className="nav-link btn btn-success mx-1 text-white" to="/sandbox">
+              <li className="nav-item d-flex align-items-center gap-2">
+                <Link className="nav-link btn btn-success text-white" href="/sandbox">
                   Sandbox
                 </Link>
                 
-                {/* Link para Login */}
-                <Link className="nav-link btn btn-success mx-1 text-white" to="/login">
-                  Login
-                </Link>
+                {isAuth ? (
+                  <>
+                    <Link className="nav-link btn btn-outline-light" href="/admin">
+                      Admin
+                    </Link>
+                    <button className="nav-link btn btn-danger text-white" onClick={handleLogout}>
+                      Sair
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link className="nav-link btn btn-primary text-white" href="/login">
+                      Login
+                    </Link>
+                    <Link className="nav-link btn btn-outline-light" href="/register">
+                      Cadastrar
+                    </Link>
+                  </>
+                )}
               </li>
             </ul>
           </div>

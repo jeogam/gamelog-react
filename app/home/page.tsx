@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom'
+// app/home/page.tsx
 
-// Importando as imagens dos jogos
-// O caminho "../assets" significa: "volte uma pasta (saindo de pages) e entre em assets"
-import hadesImg from '../assets/images/jogos/hades-thumbnail.jpg'
-import btd6Img from '../assets/images/jogos/btd6-thumbnail.jpg'
-import eldenImg from '../assets/images/jogos/elden-ring-thumbnail.jpg'
+import Link from 'next/link'
+import Image from 'next/image'
+
+// ⚠️ Ajuste os caminhos relativos de importação
+import hadesImg from '@/assets/images/jogos/hades-thumbnail.jpg'
+import btd6Img from '@/assets/images/jogos/btd6-thumbnail.jpg'
+import eldenImg from '@/assets/images/jogos/elden-ring-thumbnail.jpg'
 
 function Home() {
   return (
@@ -15,8 +17,8 @@ function Home() {
         
         {/* Card 1: Hades */}
         <div className="col">
-          <Link to="/hades" className="card h-100 text-decoration-none text-light">
-            <img src={hadesImg} className="card-img-top" alt="Thumbnail do jogo Hades" />
+          <Link href="/hades" className="card h-100 text-decoration-none text-light">
+            <Image src={hadesImg} className="card-img-top" alt="Thumbnail do jogo Hades" width={400} height={225} />
             <div className="card-body bg-dark">
               <h5 className="card-title">Hades</h5>
               <p className="card-text text-muted">Gênero: Roguelike, Ação</p>
@@ -27,8 +29,8 @@ function Home() {
 
         {/* Card 2: Bloons TD 6 */}
         <div className="col">
-          <Link to="/btd6" className="card h-100 text-decoration-none text-light">
-            <img src={btd6Img} className="card-img-top" alt="Thumbnail do jogo BTD6" />
+          <Link href="/btd6" className="card h-100 text-decoration-none text-light">
+            <Image src={btd6Img} className="card-img-top" alt="Thumbnail do jogo BTD6" width={400} height={225} />
             <div className="card-body bg-dark">
               <h5 className="card-title">Bloons TD 6</h5>
               <p className="card-text text-muted">Gênero: Tower Defense</p>
@@ -39,8 +41,8 @@ function Home() {
 
         {/* Card 3: Elden Ring */}
         <div className="col">
-          <Link to="/elden-ring" className="card h-100 text-decoration-none text-light">
-            <img src={eldenImg} className="card-img-top" alt="Thumbnail do jogo Elden Ring" />
+          <Link href="/elden-ring" className="card h-100 text-decoration-none text-light">
+            <Image src={eldenImg} className="card-img-top" alt="Thumbnail do jogo Elden Ring" width={400} height={225} />
             <div className="card-body bg-dark">
               <h5 className="card-title">Elden Ring</h5>
               <p className="card-text text-muted">Gênero: RPG de Ação</p>

@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
-// Importando o áudio
-import terrariaAudio from '../../assets/audio/terraria-ost-corruption.mp3'
+// app/sandbox/atividade-4/page.tsx
+
+import Link from 'next/link'
+import terrariaAudio from '@/assets/audio/terraria-theme.mp3'
 
 function Atividade4() {
   return (
@@ -9,7 +10,6 @@ function Atividade4() {
       <p>Esta atividade contém exemplos de áudio e vídeo responsivo.</p>
 
       <h2>Áudio</h2>
-      {/* O atributo 'controls' é booleano, basta estar presente */}
       <audio controls className="mb-4 w-100">
         <source src={terrariaAudio} type="audio/mpeg" />
         <p>Seu navegador não suporta áudio.</p>
@@ -27,7 +27,7 @@ function Atividade4() {
       </div>
 
       <div className="mt-4 text-center">
-        <Link className="btn btn-secondary" to="/sandbox">Voltar</Link>
+        <Link className="btn btn-secondary" href="/sandbox">Voltar</Link>
       </div>
     </main>
   )

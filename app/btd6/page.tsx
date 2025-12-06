@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+// app/btd6/page.tsx
+
+import Link from 'next/link' // Troca de import
 
 function Btd6() {
   return (
@@ -6,7 +8,7 @@ function Btd6() {
         <h1 className="mb-4">Bloons TD 6</h1>
         <p className="lead text-secondary">Página em construção...</p>
         
-        <Link className="btn btn-success" to="/home">
+        <Link className="btn btn-success" href="/home">
             Voltar para Home
         </Link>
     </main>

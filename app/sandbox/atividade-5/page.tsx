@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+// app/sandbox/atividade-5/page.tsx
+
+import Link from 'next/link'
 
 function Atividade5() {
   return (
@@ -40,7 +42,7 @@ function Atividade5() {
       </div>
 
       <div className="mt-4 text-center">
-        <Link className="btn btn-secondary" to="/sandbox">Voltar</Link>
+        <Link className="btn btn-secondary" href="/sandbox">Voltar</Link>
       </div>
     </main>
   )

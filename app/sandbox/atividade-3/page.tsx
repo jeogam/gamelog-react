@@ -1,5 +1,9 @@
-import { Link } from 'react-router-dom'
-import terrariaCapa from '../../assets/images/terraria-capa.png'
+// app/sandbox/atividade-3/page.tsx
+
+import Link from 'next/link'
+import Image from 'next/image'
+// ⚠️ Ajuste o caminho relativo de importação
+import terrariaCapa from '@/assets/images/terraria-capa.png'
 
 function Atividade3() {
   return (
@@ -19,13 +23,17 @@ function Atividade3() {
       <h3>Imagem Dinâmica e Responsiva</h3>
       <p>Esta imagem irá se ajustar ao tamanho da tela.</p>
       
-      <picture>
-        <source media="(max-width: 1050px)" srcSet={terrariaCapa} />
-        <img src={terrariaCapa} className="img-fluid rounded" alt="Capa do jogo Terraria" />
-      </picture>
+      {/* Usando o componente Image do Next.js */}
+      <Image 
+        src={terrariaCapa} 
+        alt="Capa do jogo Terraria" 
+        className="img-fluid rounded" 
+        width={400} 
+        height={400}
+      />
 
       <div className="mt-4 text-center">
-        <Link className="btn btn-secondary" to="/sandbox">Voltar</Link>
+        <Link className="btn btn-secondary" href="/sandbox">Voltar</Link>
       </div>
     </main>
   )
