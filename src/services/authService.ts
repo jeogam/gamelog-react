@@ -1,9 +1,18 @@
+// src/services/authService.ts
+
 import { BASE_URL } from './api';
 
 // Tipagem do retorno do login (baseado no teu DTO Java)
 export interface LoginResponse {
   token: string;
   tipo: string;
+}
+
+// Tipagem para os dados de registro (baseado no seu model Usuario)
+export interface RegisterData {
+  nome: string;
+  email: string;
+  senha: string;
 }
 
 export const authService = {
@@ -26,6 +35,36 @@ export const authService = {
     }
 
     return response.json();
+  },
+
+  /**
+   * Realiza o cadastro de um novo utilizador.
+   * Endpoint: POST /api/v1/usuarios/usuario
+   */
+  register: async (data: RegisterData): Promise<void> => {
+    const response = await fetch(`${BASE_URL}/usuarios/usuario`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      // Adiciona um tratamento de erro mais robusto para ler a resposta do servidor
+      const errorText = await response.text();
+      let errorMessage = 'Erro ao criar conta. Tente novamente.';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorMessage;
+      } catch (e) {
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+      throw new Error(errorMessage);
+    }
+    // Retorna void (sucesso - status 201 Created)
   },
 
   /**

@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-// import { authService } from '../../src/services/authService' // Mantenha o service
+import { authService } from '@/services/authService' 
 
 function Login() {
   const router = useRouter()
@@ -19,12 +19,12 @@ function Login() {
     setLoading(true)
 
     try {
-      // ⚠️ Use authService.login(email, senha) e certifique-se que ele salva o JWT como um COOKIE
-      // O Next.js Middleware precisa do Cookie. Se usar localStorage, o Middleware não funciona.
-      // const data = await authService.login(email, senha) 
+      // ⚠️ Substitua o mock pela chamada real
+      const data = await authService.login(email, senha) 
       
-      // Simulação de sucesso:
-      const data = { token: 'mock-jwt-token' }; 
+      // Simulação de sucesso (REMOVIDO):
+      // const data = { token: 'mock-jwt-token' }; 
+      
       localStorage.setItem('gamelog_token', data.token)
       localStorage.setItem('gamelog_user', email)
 

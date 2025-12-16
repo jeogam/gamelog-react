@@ -31,7 +31,8 @@ function Register() {
     setLoading(true)
 
     try {
-      // await authService.register(formData)
+      // ⚠️ Substitua o mock pela chamada real
+      await authService.register(formData) // CHAMA O BACKEND
       setSucesso(true)
       
       setTimeout(() => {

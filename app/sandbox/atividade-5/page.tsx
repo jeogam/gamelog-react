@@ -1,5 +1,3 @@
-// app/sandbox/atividade-5/page.tsx
-
 import Link from 'next/link'
 
 function Atividade5() {

@@ -3,11 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-// ⚠️ Ajuste os caminhos relativos de importação
-import hadesImg from '@/assets/images/jogos/hades-thumbnail.jpg'
-import btd6Img from '@/assets/images/jogos/btd6-thumbnail.jpg'
-import eldenImg from '@/assets/images/jogos/elden-ring-thumbnail.jpg'
-
 function Home() {
   return (
     <div className="mt-4">
@@ -18,7 +13,13 @@ function Home() {
         {/* Card 1: Hades */}
         <div className="col">
           <Link href="/hades" className="card h-100 text-decoration-none text-light">
-            <Image src={hadesImg} className="card-img-top" alt="Thumbnail do jogo Hades" width={400} height={225} />
+            <Image 
+                src="/images/jogos/hades-thumbnail.jpg" 
+                className="card-img-top" 
+                alt="Thumbnail do jogo Hades" 
+                width={400} 
+                height={225} 
+            />
             <div className="card-body bg-dark">
               <h5 className="card-title">Hades</h5>
               <p className="card-text text-muted">Gênero: Roguelike, Ação</p>
@@ -30,7 +31,13 @@ function Home() {
         {/* Card 2: Bloons TD 6 */}
         <div className="col">
           <Link href="/btd6" className="card h-100 text-decoration-none text-light">
-            <Image src={btd6Img} className="card-img-top" alt="Thumbnail do jogo BTD6" width={400} height={225} />
+            <Image 
+                src="/images/jogos/btd6-thumbnail.jpg" 
+                className="card-img-top" 
+                alt="Thumbnail do jogo BTD6" 
+                width={400} 
+                height={225} 
+            />
             <div className="card-body bg-dark">
               <h5 className="card-title">Bloons TD 6</h5>
               <p className="card-text text-muted">Gênero: Tower Defense</p>
@@ -42,7 +49,13 @@ function Home() {
         {/* Card 3: Elden Ring */}
         <div className="col">
           <Link href="/elden-ring" className="card h-100 text-decoration-none text-light">
-            <Image src={eldenImg} className="card-img-top" alt="Thumbnail do jogo Elden Ring" width={400} height={225} />
+            <Image 
+                src="/images/jogos/elden-ring-thumbnail.jpg" 
+                className="card-img-top" 
+                alt="Thumbnail do jogo Elden Ring" 
+                width={400} 
+                height={225} 
+            />
             <div className="card-body bg-dark">
               <h5 className="card-title">Elden Ring</h5>
               <p className="card-text text-muted">Gênero: RPG de Ação</p>

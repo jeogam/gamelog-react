@@ -3,11 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-// ⚠️ Ajuste os caminhos relativos de importação
-import ativ3Img from '@/assets/images/atividade-3.png'
-import ativ4Img from '@/assets/images/atividade-4.png'
-import ativ5Img from '@/assets/images/atividade-5.png'
-
 function Sandbox() {
   return (
     <main className="mt-4 text-center">
@@ -17,17 +12,33 @@ function Sandbox() {
       <section className="activity-grid mt-4">
         
         <Link href="/sandbox/atividade-3" className="activity-card">
-          <Image src={ativ3Img} alt="Thumbnail da Atividade 3" width={250} height={150} />
+          {/* O caminho começa com / (barra), que representa a pasta public */}
+          <Image 
+            src="/images/atividade-3.png" 
+            alt="Thumbnail da Atividade 3" 
+            width={250} 
+            height={150} 
+          />
           <h3>Atividade 3: Listas e Imagens</h3>
         </Link>
 
         <Link href="/sandbox/atividade-4" className="activity-card">
-          <Image src={ativ4Img} alt="Thumbnail da Atividade 4" width={250} height={150} />
+          <Image 
+            src="/images/atividade-4.png" 
+            alt="Thumbnail da Atividade 4" 
+            width={250} 
+            height={150} 
+          />
           <h3>Atividade 4: Mídia e CSS</h3>
         </Link>
 
         <Link href="/sandbox/atividade-5" className="activity-card">
-          <Image src={ativ5Img} alt="Thumbnail da Atividade 5" width={250} height={150} />
+          <Image 
+            src="/images/atividade-5.png" 
+            alt="Thumbnail da Atividade 5" 
+            width={250} 
+            height={150} 
+          />
           <h3>Atividade 5: Paleta de Cores</h3>
         </Link>
 

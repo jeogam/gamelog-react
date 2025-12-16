@@ -1,7 +1,4 @@
-// app/sandbox/atividade-4/page.tsx
-
 import Link from 'next/link'
-import terrariaAudio from '@/assets/audio/terraria-theme.mp3'
 
 function Atividade4() {
   return (
@@ -11,7 +8,8 @@ function Atividade4() {
 
       <h2>Áudio</h2>
       <audio controls className="mb-4 w-100">
-        <source src={terrariaAudio} type="audio/mpeg" />
+        {/* Caminho direto para public/audio/... */}
+        <source src="/audio/terraria-theme.mp3" type="audio/mpeg" />
         <p>Seu navegador não suporta áudio.</p>
       </audio>
 

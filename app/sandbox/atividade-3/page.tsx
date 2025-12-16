@@ -1,9 +1,5 @@
-// app/sandbox/atividade-3/page.tsx
-
 import Link from 'next/link'
 import Image from 'next/image'
-// ⚠️ Ajuste o caminho relativo de importação
-import terrariaCapa from '@/assets/images/terraria-capa.png'
 
 function Atividade3() {
   return (
@@ -23,9 +19,9 @@ function Atividade3() {
       <h3>Imagem Dinâmica e Responsiva</h3>
       <p>Esta imagem irá se ajustar ao tamanho da tela.</p>
       
-      {/* Usando o componente Image do Next.js */}
+      {/* Usando caminho absoluto a partir da pasta public */}
       <Image 
-        src={terrariaCapa} 
+        src="/images/terraria-capa.png" 
         alt="Capa do jogo Terraria" 
         className="img-fluid rounded" 
         width={400} 
