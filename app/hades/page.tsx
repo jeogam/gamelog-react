@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { fetchGameDetails } from '@/services/gameService' 
 
 // Certifique-se de que a imagem hades-promo-art.png está na pasta correta
-import hadesPromo from '@/assets/images/jogos/hades-promo-art.png' 
+import hadesPromo from '@/images/jogos/hades-promo-art.png' 
 
 // Define metadados dinamicamente (para SSR/SEO)
 export async function generateMetadata() {
