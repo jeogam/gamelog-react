@@ -4,8 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { fetchGameDetails } from '@/services/gameService' 
 
-// Certifique-se de que a imagem hades-promo-art.png está na pasta correta
-import hadesPromo from '/images/jogos/hades-promo-art.png' 
 
 // Define metadados dinamicamente (para SSR/SEO)
 export async function generateMetadata() {
@@ -42,12 +40,11 @@ export default async function HadesPage() {
                     {/* Dados dinâmicos */}
                     <p className="lead">{game.descricao}</p>
 
-                    <Image 
-                        src={hadesPromo} 
-                        className="img-fluid rounded shadow-sm mb-4" 
-                        alt={`Arte promocional do jogo ${game.titulo}`} 
-                        width={900} 
-                        height={500}
+                    <Image
+                        src="/images/jogos/hades-promo-art.png" 
+                        alt="Hades Promo Art"
+                        width={1920} 
+                        height={1080}
                     />
 
                     <h2 className="mt-4">A Trama: Fuga do Submundo</h2>
