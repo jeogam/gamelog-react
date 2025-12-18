@@ -1,15 +1,16 @@
-// src/components/Navbar.tsx
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation' // 1. IMPORTAR usePathname
 import { useEffect, useState } from 'react'
-import { authService } from '@/services/authService' // Importe o authService!
+import { authService } from '@/services/authService'
 
 function Navbar() {
   const router = useRouter()
+  const pathname = usePathname() // 2. PEGAR A ROTA ATUAL
+  
   const [isAuth, setIsAuth] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false) // Estado para Admin
+  const [isAdmin, setIsAdmin] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -19,17 +20,20 @@ function Navbar() {
     const autenticado = authService.isAuthenticated()
     setIsAuth(autenticado)
 
-    // Verifica Role (Papel)
+    // Verifica Role
     const role = authService.getRole()
-    console.log("Navbar check - Role:", role) // Debug
     
-    // Verifica se é ADMINISTRADOR (Ajuste a string se o backend mandar diferente)
+    // Verifica se é ADMINISTRADOR
     setIsAdmin(role === 'ADMINISTRADOR')
     
-  }, [])
+  }, [pathname]) // 3. ADICIONAR pathname AQUI (Isso força a re-verificação ao mudar de página)
 
   const handleLogout = () => {
     authService.logout()
+    // Atualiza estados locais imediatamente para feedback visual
+    setIsAuth(false)
+    setIsAdmin(false)
+    router.refresh()
   }
 
   if (!mounted) {
@@ -74,7 +78,6 @@ function Navbar() {
                 
                 {isAuth ? (
                   <>
-                    {/* Só mostra botão Admin se for admin */}
                     {isAdmin && (
                       <Link className="nav-link btn btn-outline-light" href="/admin">
                         Admin

@@ -1,4 +1,3 @@
-// app/login/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -19,16 +18,13 @@ function Login() {
     setLoading(true)
 
     try {
-      // CORREÇÃO 1: Passar um objeto { email, senha } e não parâmetros soltos
+      // 1. Faz o login (salva token e papel no localStorage)
       await authService.login({ email, senha }) 
       
-      // CORREÇÃO 2: Remover os localStorage.setItem manuais daqui.
-      // O authService já faz isso da forma correta (incluindo salvar o papel/role).
-      
-      // Redireciona para o Admin (ou Home)
-      // Dica: router.refresh() ajuda a atualizar o Navbar imediatamente
-      router.push('/admin')
-      router.refresh() 
+      // 2. Redireciona TODO MUNDO para a Home
+      // O Navbar já vai detectar que é Admin e mostrar o botão lá
+      router.push('/')
+      router.refresh() // Garante que a Navbar atualize o estado
       
     } catch (error) {
       setErro('Email ou senha incorretos.')
