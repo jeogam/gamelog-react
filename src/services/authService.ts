@@ -1,84 +1,56 @@
-// src/services/authService.ts
+import api from './api';
 
-import { BASE_URL } from './api';
+// Tipagem do Login (O que enviamos)
+export interface LoginDTO {
+  email: string;
+  senha: string;
+}
 
-// Tipagem do retorno do login (baseado no teu DTO Java)
+// Tipagem da Resposta do Login (O que recebemos)
 export interface LoginResponse {
   token: string;
   tipo: string;
 }
 
-// Tipagem para os dados de registro (baseado no seu model Usuario)
-export interface RegisterData {
+// Tipagem do Cadastro
+export interface RegisterDTO {
   nome: string;
   email: string;
   senha: string;
 }
 
 export const authService = {
-  /**
-   * Realiza o login do utilizador.
-   * Nota: Este endpoint é público, por isso usamos fetch direto com BASE_URL
-   * em vez da função 'request' genérica (que exige token).
-   */
-  login: async (email: string, senha: string): Promise<LoginResponse> => {
-    const response = await fetch(`${BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, senha })
-    });
-
-    if (!response.ok) {
-      throw new Error('Credenciais inválidas ou erro no servidor.');
+  // LOGIN
+  login: async (dados: LoginDTO) => {
+    // POST /auth/login
+    const response = await api.post<LoginResponse>('/auth/login', dados);
+    
+    // Se deu certo, salvamos o token
+    if (response.data.token) {
+      localStorage.setItem('gamelog_token', response.data.token);
+      localStorage.setItem('gamelog_user_email', dados.email); // Opcional: salvar email
     }
-
-    return response.json();
+    return response.data;
   },
 
-  /**
-   * Realiza o cadastro de um novo utilizador.
-   * Endpoint: POST /api/v1/usuarios/usuario
-   */
-  register: async (data: RegisterData): Promise<void> => {
-    const response = await fetch(`${BASE_URL}/usuarios/usuario`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      // Adiciona um tratamento de erro mais robusto para ler a resposta do servidor
-      const errorText = await response.text();
-      let errorMessage = 'Erro ao criar conta. Tente novamente.';
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.message || errorMessage;
-      } catch (e) {
-        if (errorText) {
-          errorMessage = errorText;
-        }
-      }
-      throw new Error(errorMessage);
-    }
-    // Retorna void (sucesso - status 201 Created)
+  // CADASTRO
+  register: async (dados: RegisterDTO) => {
+    // POST /usuarios/usuario
+    await api.post('/usuarios/usuario', dados);
   },
 
-  /**
-   * Remove os dados de autenticação (Logout).
-   */
+  // LOGOUT
   logout: () => {
     localStorage.removeItem('gamelog_token');
-    localStorage.removeItem('gamelog_user');
+    localStorage.removeItem('gamelog_user_email');
+    window.location.href = '/login'; // Redireciona forçado para login
   },
 
-  /**
-   * Verifica se o utilizador está autenticado.
-   */
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('gamelog_token');
+  // VERIFICA SE ESTÁ LOGADO
+  isAuthenticated: () => {
+    if (typeof window !== 'undefined') {
+      return !!localStorage.getItem('gamelog_token');
+    }
+    return false;
   }
 };

@@ -1,95 +1,104 @@
-// app/login/page.tsx
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { authService } from '@/services/authService' 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authService } from '@/services/authService';
 
-function Login() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
-  const [loading, setLoading] = useState(false)
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setErro('')
-    setLoading(true)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro('');
+    setLoading(true);
 
     try {
-      // ⚠️ Substitua o mock pela chamada real
-      const data = await authService.login(email, senha) 
-      
-      // Simulação de sucesso (REMOVIDO):
-      // const data = { token: 'mock-jwt-token' }; 
-      
-      localStorage.setItem('gamelog_token', data.token)
-      localStorage.setItem('gamelog_user', email)
-
-      router.push('/admin')
-      
-    } catch (error) {
-      setErro('Email ou palavra-passe incorretos.')
+      await authService.login({ email, senha });
+      router.push('/home');
+    } catch (error: any) {
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        setErro('Credenciais incorretas.');
+      } else {
+        setErro('Erro de conexão.');
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="mt-5">
-        <h1>Acesse a sua Conta</h1>
+    // Fundo escuro com uma imagem sutil por baixo
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D1117]">
+      {/* Imagem de Fundo (opcional) */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-20"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2070&auto=format&fit=crop')" }}
+      />
+      
+      {/* Card Central */}
+      <div className="glass-panel animate-fade-up z-10 w-full max-w-md rounded-2xl p-8">
         
-        <form onSubmit={handleLogin} className="login-form">
-            
-            {erro && (
-              <div className="alert alert-danger" role="alert">
-                {erro}
-              </div>
-            )}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-extrabold text-white">
+            Game<span style={{ color: '#E839C2' }}>Log</span>
+          </h1>
+          <p className="text-gray-400 text-sm">Sua biblioteca definitiva</p>
+        </div>
 
-            <div className="mb-3"> 
-                <label htmlFor="email" className="form-label">E-mail:</label> 
-                <input 
-                  type="email" 
-                  className="form-control" 
-                  id="email" 
-                  name="email" 
-                  required 
-                  placeholder="Digite o seu e-mail"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                /> 
+        <form onSubmit={handleLogin} className="space-y-6">
+          {erro && (
+            <div className="rounded bg-red-500/20 p-3 text-center text-sm text-red-200 border border-red-500/30">
+              {erro}
             </div>
+          )}
 
-            <div className="mb-3">
-                <label htmlFor="senha" className="form-label">Senha:</label>
-                <input 
-                  type="password" 
-                  className="form-control" 
-                  id="senha" 
-                  name="senha" 
-                  required 
-                  placeholder="Digite a sua senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)} 
-                />
-            </div>
+          {/* Input Email */}
+          <div className="relative group">
+            <span className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-[#E839C2]">
+              📧
+            </span>
+            <input
+              type="email"
+              placeholder="Email"
+              className="input-gamer"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'A entrar...' : 'Entrar'}
-            </button>
-            <div className="text-center mt-3">
-                <small className="text-muted">Não tem conta? <Link href="/register">Cadastre-se</Link></small>
-            </div>
+          {/* Input Senha */}
+          <div className="relative group">
+            <span className="absolute left-3 top-3.5 text-gray-500 group-focus-within:text-[#E839C2]">
+              🔒
+            </span>
+            <input
+              type="password"
+              placeholder="Senha"
+              className="input-gamer"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-gamer">
+            {loading ? 'Acessando...' : 'ENTRAR'}
+          </button>
         </form>
-    </main>
-  )
-}
 
-export default Login
+        <div className="mt-6 text-center text-sm text-gray-500">
+          Ainda não tem conta?{' '}
+          <Link href="/register" style={{ color: '#E839C2' }} className="hover:underline font-bold">
+            Cadastre-se grátis
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
