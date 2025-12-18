@@ -46,6 +46,14 @@ export const authService = {
     window.location.href = '/login'; // Redireciona forçado para login
   },
 
+  // ADICIONE ESTA FUNÇÃO:
+  getRole: (): string | null => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gamelog_user_role');
+    }
+    return null;
+  },
+  
   // VERIFICA SE ESTÁ LOGADO
   isAuthenticated: () => {
     if (typeof window !== 'undefined') {
