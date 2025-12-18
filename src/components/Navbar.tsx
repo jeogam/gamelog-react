@@ -3,21 +3,6 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-<<<<<<< Updated upstream
-// import { authService } from '../services/authService' // Mantenha a importação do seu service
-
-function Navbar() {
-  const router = useRouter()
-  
-  // Verifica autenticação usando localStorage (deve ser migrado para Cookies + Middleware)
-  const isAuth = typeof window !== 'undefined' && !!localStorage.getItem('gamelog_token')
-
-  const handleLogout = () => {
-    // authService.logout() 
-    localStorage.removeItem('gamelog_token')
-    localStorage.removeItem('gamelog_user')
-    router.push('/')
-=======
 import { useEffect, useState } from 'react'
 import { authService } from '@/services/authService' // Importe o authService!
 
@@ -57,7 +42,6 @@ function Navbar() {
             </nav>
         </header>
     )
->>>>>>> Stashed changes
   }
 
   return (
@@ -90,12 +74,6 @@ function Navbar() {
                 
                 {isAuth ? (
                   <>
-<<<<<<< Updated upstream
-                    <Link className="nav-link btn btn-outline-light" href="/admin">
-                      Admin
-                    </Link>
-                    <button className="nav-link btn btn-danger text-white" onClick={handleLogout}>
-=======
                     {/* Só mostra botão Admin se for admin */}
                     {isAdmin && (
                       <Link className="nav-link btn btn-outline-light" href="/admin">
@@ -104,7 +82,6 @@ function Navbar() {
                     )}
                     
                     <button className="nav-link btn btn-danger text-white border-0" onClick={handleLogout}>
->>>>>>> Stashed changes
                       Sair
                     </button>
                   </>

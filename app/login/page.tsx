@@ -19,19 +19,19 @@ function Login() {
     setLoading(true)
 
     try {
-      // ⚠️ Substitua o mock pela chamada real
-      const data = await authService.login(email, senha) 
+      // CORREÇÃO 1: Passar um objeto { email, senha } e não parâmetros soltos
+      await authService.login({ email, senha }) 
       
-      // Simulação de sucesso (REMOVIDO):
-      // const data = { token: 'mock-jwt-token' }; 
+      // CORREÇÃO 2: Remover os localStorage.setItem manuais daqui.
+      // O authService já faz isso da forma correta (incluindo salvar o papel/role).
       
-      localStorage.setItem('gamelog_token', data.token)
-      localStorage.setItem('gamelog_user', email)
-
+      // Redireciona para o Admin (ou Home)
+      // Dica: router.refresh() ajuda a atualizar o Navbar imediatamente
       router.push('/admin')
+      router.refresh() 
       
     } catch (error) {
-      setErro('Email ou palavra-passe incorretos.')
+      setErro('Email ou senha incorretos.')
     } finally {
       setLoading(false)
     }
@@ -82,7 +82,7 @@ function Login() {
               className="btn btn-primary"
               disabled={loading}
             >
-              {loading ? 'A entrar...' : 'Entrar'}
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
             <div className="text-center mt-3">
                 <small className="text-muted">Não tem conta? <Link href="/register">Cadastre-se</Link></small>
