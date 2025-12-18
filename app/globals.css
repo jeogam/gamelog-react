@@ -1,441 +1,113 @@
-/* ==============================================
-   1. DEFINIÇÃO DA PALETA DE CORES (VARIÁVEIS)
-   ============================================== */
+@import "tailwindcss";
 
+/* ==============================================
+   1. VARIÁVEIS (Mantidas para referência)
+   ============================================== */
 :root {
-    --cor-dominante: #0D1117;
-    --cor-secundaria: #21262D;
-    --cor-destaque: #E839C2;
-    --cor-texto-principal: #F0F6FC;
-    --cor-texto-secundario: #8B949E;
+  --cor-dominante: #0D1117;
+  --cor-secundaria: #21262D;
+  --cor-destaque: #E839C2;
+  --cor-texto-principal: #F0F6FC;
+  --cor-texto-secundario: #8B949E;
+}
+
+@theme {
+  /* Configs do tema v4 */
 }
 
 /* ==============================================
-   2. ESTILOS GERAIS E RESET BÁSICO (MOBILE-FIRST)
+   2. REGRAS DE LAYOUT E COMPONENTES
    ============================================== */
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box; 
-}
+@layer utilities {
+  
+  /* BOTÕES:
+     Aqui a mágica acontece. A classe .btn agora aplica o rosa
+     e sobrescreve o transparente do Bootstrap.
+  */
+  .btn {
+    @apply inline-flex items-center justify-center px-5 py-2.5 
+           text-base font-bold text-white no-underline
+           rounded-lg transition-all duration-300 cursor-pointer
+           border border-transparent shadow-md;
 
-/* Estilos base (Mobile) */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background-color: var(--cor-dominante);
-    color: var(--cor-texto-principal);
-    line-height: 1.6;
-}
+    /* Força o Rosa Neon */
+    background-color: #E839C2 !important; 
+    border-color: #E839C2 !important;
+  }
 
-/* ==============================================
-   3. ESTILOS DE TEXTO E LINKS (MOBILE-FIRST)
-   ============================================== */
+  .btn:hover {
+    background-color: #fd7de1 !important;
+    border-color: #fd7de1 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(232, 57, 194, 0.4);
+  }
 
-h1, h2, h3, h4, h5, h6 {
-    color: var(--cor-texto-principal); 
-    margin-bottom: 1rem;
-}
+  /* BOTÃO SAIR (VERMELHO):
+     Se precisar de um botão diferente, use essa classe junto com .btn
+     Ex: className="btn btn-danger"
+  */
+  .btn-danger {
+    background-color: #da3633 !important;
+    border-color: #da3633 !important;
+  }
+  .btn-danger:hover {
+    background-color: #f85149 !important;
+  }
 
-p {
-    color: var(--cor-texto-secundario); 
-    margin-bottom: 1rem;
-}
+  /* BOTÃO OUTLINE (Borda):
+     Para Admin ou Cadastro, se não quiser rosa cheio
+  */
+  .btn-outline {
+    background-color: transparent !important;
+    border: 1px solid #30363d !important;
+    color: #8B949E !important;
+  }
+  .btn-outline:hover {
+    background-color: rgba(255,255,255,0.05) !important;
+    border-color: white !important;
+    color: white !important;
+  }
 
-a {
-    color: var(--cor-destaque); 
-    text-decoration: none;
-    transition: all 0.2s ease-in-out;
-}
-
-a:hover {
-    text-decoration: underline;
-    filter: brightness(1.2); 
-}
-
-/* ==============================================
-   4. ESTILOS PARA COMPONENTES (MOBILE-FIRST)
-   ============================================== */
-
-.btn {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: bold;
-    text-align: center;
-    color: #ffffff;
-    background-color: var(--cor-destaque);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.4s;
-}
-
-.btn:hover {
-    background-color: #fd7de1;
-}
-
-/* ==============================================
-   5. REGRAS DE LAYOUT (MOBILE-FIRST)
-   ============================================== */
-
-
-
-main, .sandbox-link {
-    text-align: center;
-}
-
-/* Rodapé (Mobile) */
-footer {
-    border-top: 1px solid #30363d;
-    margin-top: 40px;
-    padding-top: 20px;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-
-
-/* ==============================================
-   8. ESTILOS DA PÁGINA SANDBOX (JÁ RESPONSIVO)
-   ============================================== */
-
-/* Esta grade já é responsiva e se alinha com o Mobile First,
-   pois 'auto-fit' e 'minmax' se adaptam a qualquer tamanho. */
-.activity-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 40px;
-}
-
-.activity-card {
-    background-color: var(--cor-dominante);
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s;
-    text-decoration: none; 
-}
-
-.activity-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0px 5px 15px rgba(232, 57, 194, 0.2);
-}
-
-.activity-card img {
-    max-width: 100%;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-
-.activity-card h3 {
-    color: var(--cor-texto-principal);
-    font-size: 1.1rem;
-}
-
-/* ==============================================
-   9. ESTILOS PARA MÍDIA RESPONSIVA (MOBILE-FIRST)
-   ============================================== */
-
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 20px 0;
-}
-
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 */
-    height: 0;
-    overflow: hidden;
-    margin: 20px 0;
-    border-radius: 8px;
-}
-
-.video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-/* ==============================================
-   10. ESTILOS DA PÁGINA DE PALETA DE CORES
-   ============================================== */
-
-.color-info {
-    margin-top: 40px;
-}
-
-.swatch-container {
-    display: flex;
-    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.color-swatch {
-    width: 100px;
-    height: 100px;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-}
-
-/* ==============================================
-   11. ESTILOS DE FORMULÁRIO E TABELA (MOBILE-FIRST)
-   ============================================== */
-
-/* -- Formulário de Login (Mobile) -- */
-.login-form {
-    margin-top: 30px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    background-color: var(--cor-dominante);
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    color: var(--cor-texto-principal);
-    font-size: 1rem;
-}
-
-/* -- Tabela de Admin (Mobile) -- */
-/* Para mobile, forçamos a tabela a se comportar como 'blocos'
-   para evitar a barra de rolagem horizontal. */
-.admin-table {
-    width: 100%;
-    margin-top: 30px;
-    border-collapse: collapse;
-}
-
-.admin-table thead {
-    /* Esconde o cabeçalho no mobile (mostraremos os labels via CSS) */
-    display: none; 
-}
-
-.admin-table tr {
-    display: block;
-    margin-bottom: 15px;
-    border: 1px solid #30363d;
-}
-
-.admin-table td {
-    display: block;
-    padding: 12px;
-    text-align: right; /* Alinha o valor à direita */
+  /* NAVBAR
+  */
+  .navbar-custom {
+    /* Mudei de rgba(13, 17, 23...) para rgba(22, 27, 34...) 
+       Isso deixa ela levemente mais clara que o fundo do site */
+    background-color: rgba(33, 41, 51, 0.95); 
+    
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid #30363d;
-}
-
-.admin-table td:last-child {
-    border-bottom: none;
-}
-
-/* Adiciona o label (cabeçalho) antes do dado */
-.admin-table td[data-label]::before {
-    content: attr(data-label);
-    float: left;
-    font-weight: bold;
-    text-align: left;
-}
-
-/* Botões de Ação na Tabela (Mobile) */
-.btn-action {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    margin-right: 5px;
-    color: white;
-}
-
-.btn-action.edit {
-    background-color: #007BFF; /* Azul */
-}
-
-.btn-action.delete {
-    background-color: #DC3545; /* Vermelho */
-}
-
-
-/* ==============================================
-   7. REGRAS DE RESPONSIVIDADE (AULA 10 - MOBILE FIRST)
-   ============================================== */
-
-/* * Breakpoint para Tablets e Desktops (Telas maiores que 768px)
- * Aqui "adicionamos" estilos para telas maiores[cite: 252, 258, 579].
- */
-@media (min-width: 768px) {
-
-    /* Layout */
-    div#interface {
-        max-width: 900px; /* Define uma largura máxima em telas maiores */
-    }
-
-    /* Cabeçalho (Desktop) */
-    header#cabecalho {
-        flex-direction: row; /* Volta a ser 'row' (Aula 10, pg 20) */
-        justify-content: space-between; /* Espaça o logo e o menu */
-    }
-
-    header#cabecalho h1.logo {
-        margin-bottom: 0;
-    }
-
-    main, .sandbox-link {
-        text-align: left; /* Alinha o texto à esquerda */
-    }
-
-    /* Menu (Desktop) */
-    nav#menu li {
-        display: inline-block; /* Menu horizontal */
-        margin: 2px;
-    }
-
-    /* Tabela (Desktop) */
-    .admin-table thead {
-        display: table-header-group; /* Mostra o cabeçalho novamente */
-    }
-
-    .admin-table tr {
-        display: table-row; /* Volta ao comportamento padrão de tabela */
-        margin-bottom: 0;
-        border: none;
-    }
-
-    .admin-table td {
-        display: table-cell; /* Volta ao comportamento padrão de tabela */
-        text-align: left;
-        border: 1px solid #30363d;
-    }
-
-    .admin-table td[data-label]::before {
-        content: ""; /* Esconde os labels '::before' no desktop */
-        display: none;
-    }
+    @apply fixed top-0 left-0 w-full z-50 h-20;
+  }
 }
 
 /* ==============================================
-   ESTILOS ADICIONAIS PARA CARDS BOOTSTRAP
+   3. ELEMENTOS GLOBAIS (HTML TAGS)
    ============================================== */
 
-/* Justificativa: A classe .card do Bootstrap[BOOTSTRAP].pdf] por padrão tem fundo claro.
-   Sobrescrevemos isso para usar a cor secundária do nosso tema escuro.
-   Também ajustamos a borda e a cor padrão do texto dentro do card. */
-.card {
-    background-color: var(--cor-secundaria); /* Define o fundo do card com sua cor secundária */
-    border: 1px solid #30363d;             /* Adiciona uma borda sutil que combina com o tema */
-    color: var(--cor-texto-principal);     /* Garante que o texto padrão dentro do card seja claro */
+/* Reset do Body */
+body {
+  background-color: #0D1117;
+  color: #F0F6FC;
+  @apply font-sans flex flex-col min-h-screen m-0;
 }
 
-/* Garante que o título do card use a cor principal do texto do tema */
-.card-title {
-     color: var(--cor-texto-principal);
+main {
+  @apply flex-1 w-full flex flex-col items-center;
 }
 
-/* Opcional: Garante que o corpo do card use a cor secundária, mesmo se você remover o 'bg-dark' do HTML */
-.card-body {
-     background-color: var(--cor-secundaria); 
+/* FOOTER (Direto na tag)
+   Isso conserta seu componente Footer() automaticamente
+*/
+footer {
+  border-top: 1px solid #30363d;
+  background-color: #0D1117;
+  color: #8B949E;
+  @apply mt-auto py-8 text-center text-sm w-full;
 }
 
-/* ==============================================
-   AJUSTES DE COR PARA COMPONENTES BOOTSTRAP
-   ============================================== */
-
-/* Justificativa: Sobrescreve a cor padrão do Bootstrap '.text-muted'[BOOTSTRAP].pdf]
-   quando ele está dentro de um elemento .card do nosso tema.
-   Usamos a variável '--cor-texto-secundario' que já definimos,
-   garantindo que o texto "muted" tenha contraste suficiente no fundo escuro. */
-.card .text-muted {
-    color: var(--cor-texto-secundario) !important; /* Usamos a nossa cor secundária de texto */
-}
-
-/* Opcional: Ajuste para as estrelas, se necessário */
-.card .card-text {
-    color: var(--cor-texto-principal); /* Garante que o texto normal do card seja branco */
-}
-.card .card-text.text-muted {
-    color: var(--cor-texto-secundario) !important; /* Reforça a cor para o gênero */
-}
-.card p.card-text:last-of-type { /* Seleciona o parágrafo da avaliação */
-    color: #ffc107; /* Cor amarela para estrelas, ou use a cor desejada */
-}
-
-
-/* app/globals.css */
-
-/* --- Efeitos Gamer / Glassmorphism --- */
-
-.glass-panel {
-  background: rgba(22, 27, 34, 0.7); /* Fundo escuro translúcido */
-  backdrop-filter: blur(12px);       /* Desfoque do fundo */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.input-gamer {
-  width: 100%;
-  background-color: #0d1117;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
-  padding: 12px 12px 12px 45px; /* Espaço para o ícone */
-  border-radius: 8px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.input-gamer:focus {
-  border-color: #E839C2;
-  box-shadow: 0 0 0 2px rgba(232, 57, 194, 0.2);
-}
-
-.btn-gamer {
-  width: 100%;
-  background-color: #E839C2;
-  color: white;
-  font-weight: bold;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.btn-gamer:hover {
-  background-color: #ff59c9; /* Um rosa um pouco mais claro */
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(232, 57, 194, 0.4);
-}
-
-.btn-gamer:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Animação suave de entrada */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-up {
-  animation: fadeUp 0.6s ease-out forwards;
+/* Links globais */
+a {
+  @apply no-underline text-inherit;
 }
