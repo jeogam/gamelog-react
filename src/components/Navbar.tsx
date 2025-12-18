@@ -1,21 +1,43 @@
-// src/components/Navbar.tsx
 'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-// import { authService } from '../services/authService' // Mantenha a importação do seu service
+import { useEffect, useState } from 'react'
+// import { authService } from '../services/authService' 
 
 function Navbar() {
   const router = useRouter()
-  
-  // Verifica autenticação usando localStorage (deve ser migrado para Cookies + Middleware)
-  const isAuth = typeof window !== 'undefined' && !!localStorage.getItem('gamelog_token')
+  const [isAuth, setIsAuth] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    // Marca que o componente montou no cliente
+    setMounted(true)
+    
+    // Verifica o token apenas no lado do cliente
+    const token = localStorage.getItem('gamelog_token')
+    setIsAuth(!!token)
+  }, [])
 
   const handleLogout = () => {
-    // authService.logout() 
     localStorage.removeItem('gamelog_token')
     localStorage.removeItem('gamelog_user')
-    router.push('/')
+    setIsAuth(false)
+    router.push('/login')
+    router.refresh() // Força uma atualização da página para limpar estados
+  }
+
+  // Evita renderizar botões de auth antes do JavaScript carregar para não piscar
+  if (!mounted) {
+    return (
+        <header>
+            <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+                <div className="container-fluid">
+                    <Link className="navbar-brand logo" href="/">🎮 GameLog</Link>
+                </div>
+            </nav>
+        </header>
+    )
   }
 
   return (
@@ -51,7 +73,7 @@ function Navbar() {
                     <Link className="nav-link btn btn-outline-light" href="/admin">
                       Admin
                     </Link>
-                    <button className="nav-link btn btn-danger text-white" onClick={handleLogout}>
+                    <button className="nav-link btn btn-danger text-white border-0" onClick={handleLogout}>
                       Sair
                     </button>
                   </>
