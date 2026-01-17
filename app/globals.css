@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ==============================================
-   1. VARIÁVEIS (Mantidas para referência)
+   1. VARIÁVEIS
    ============================================== */
 :root {
   --cor-dominante: #0D1117;
@@ -20,18 +20,32 @@
    ============================================== */
 
 @layer utilities {
+
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated;
+  }
   
-  /* BOTÕES:
-     Aqui a mágica acontece. A classe .btn agora aplica o rosa
-     e sobrescreve o transparente do Bootstrap.
-  */
+  /* Link Neon: Rosa por padrão, brilha e sublinha no hover */
+  .link-neon {
+    @apply font-bold text-[#E839C2] transition-all duration-300 cursor-pointer;
+  }
+
+  .link-neon:hover {
+    @apply underline;
+    /* Clareia um pouco o texto e adiciona a sombra neon */
+    color: #ff75d6; 
+    text-shadow: 0 0 12px rgba(232, 57, 194, 0.9);
+  }
+
+  /* BOTÕES */
   .btn {
     @apply inline-flex items-center justify-center px-5 py-2.5 
            text-base font-bold text-white no-underline
            rounded-lg transition-all duration-300 cursor-pointer
            border border-transparent shadow-md;
 
-    /* Força o Rosa Neon */
     background-color: #E839C2 !important; 
     border-color: #E839C2 !important;
   }
@@ -43,10 +57,6 @@
     box-shadow: 0 5px 15px rgba(232, 57, 194, 0.4);
   }
 
-  /* BOTÃO SAIR (VERMELHO):
-     Se precisar de um botão diferente, use essa classe junto com .btn
-     Ex: className="btn btn-danger"
-  */
   .btn-danger {
     background-color: #da3633 !important;
     border-color: #da3633 !important;
@@ -55,9 +65,6 @@
     background-color: #f85149 !important;
   }
 
-  /* BOTÃO OUTLINE (Borda):
-     Para Admin ou Cadastro, se não quiser rosa cheio
-  */
   .btn-outline {
     background-color: transparent !important;
     border: 1px solid #30363d !important;
@@ -69,13 +76,8 @@
     color: white !important;
   }
 
-  /* NAVBAR
-  */
   .navbar-custom {
-    /* Mudei de rgba(13, 17, 23...) para rgba(22, 27, 34...) 
-       Isso deixa ela levemente mais clara que o fundo do site */
     background-color: rgba(33, 41, 51, 0.95); 
-    
     backdrop-filter: blur(10px);
     border-bottom: 1px solid #30363d;
     @apply fixed top-0 left-0 w-full z-50 h-20;
@@ -86,7 +88,6 @@
    3. ELEMENTOS GLOBAIS (HTML TAGS)
    ============================================== */
 
-/* Reset do Body */
 body {
   background-color: #0D1117;
   color: #F0F6FC;
@@ -97,9 +98,6 @@ main {
   @apply flex-1 w-full flex flex-col items-center;
 }
 
-/* FOOTER (Direto na tag)
-   Isso conserta seu componente Footer() automaticamente
-*/
 footer {
   border-top: 1px solid #30363d;
   background-color: #0D1117;
@@ -107,7 +105,6 @@ footer {
   @apply mt-auto py-8 text-center text-sm w-full;
 }
 
-/* Links globais */
 a {
   @apply no-underline text-inherit;
 }
