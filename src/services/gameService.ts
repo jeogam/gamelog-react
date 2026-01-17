@@ -14,6 +14,7 @@ export interface SearchResult {
 }
 
 // DTO para enviar ao Back-end na hora de importar
+// (Atualizado para incluir plataformas)
 export interface GameImportDTO {
     idExterno: number;
     titulo: string;
@@ -21,6 +22,7 @@ export interface GameImportDTO {
     descricao?: string; 
     anoLancamento?: number;
     genero?: string;
+    plataformas?: string; // 👈 Adicionado
 }
 
 /**
@@ -50,14 +52,16 @@ export async function searchGames(query: string): Promise<SearchResult[]> {
  */
 export async function importGame(gameData: SearchResult): Promise<Game> {
     
-    // Prepara o objeto payload conforme o JogoCriarRequestDTO do Java
+    // Prepara o objeto payload enviando valores padrão para campos que não vêm na busca simples
     const payload: GameImportDTO = {
         idExterno: gameData.id,
         titulo: gameData.name,
-        capaUrl: gameData.background_image,
+        capaUrl: gameData.background_image || '', // Evita erro se vier null
         // Extrai o ano da string "YYYY-MM-DD"
         anoLancamento: gameData.released ? parseInt(gameData.released.substring(0, 4)) : undefined,
-        descricao: `Importado da RAWG: ${gameData.name}` // Descrição temporária
+        descricao: `Importado da RAWG: ${gameData.name}`, // Descrição temporária
+        genero: 'Importado',          // 👈 Valor padrão para não quebrar validação
+        plataformas: 'Multiplataforma' // 👈 Valor padrão
     };
 
     const response = await fetch(`${BASE_API_URL}/jogo`, {
@@ -69,7 +73,12 @@ export async function importGame(gameData: SearchResult): Promise<Game> {
     });
 
     if (!response.ok) {
-        // Tenta ler a mensagem de erro do backend
+        // Tratamento específico para jogo duplicado (422 Unprocessable Entity)
+        if (response.status === 422) {
+             throw new Error('Este jogo já foi adicionado à sua biblioteca.');
+        }
+
+        // Tenta ler a mensagem de erro genérica do backend
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Falha ao importar o jogo.');
     }
@@ -82,6 +91,9 @@ export async function importGame(gameData: SearchResult): Promise<Game> {
  * Endpoint: GET /jogos/jogo/{id}
  */
 export async function fetchGameDetails(gameId: string): Promise<Game> {
+    // Evita chamadas desnecessárias se o ID for inválido
+    if (!gameId) throw new Error('ID do jogo inválido');
+
     const response = await fetch(`${BASE_API_URL}/jogo/${gameId}`, {
         cache: 'no-store'
     });
