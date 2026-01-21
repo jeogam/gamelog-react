@@ -36,7 +36,7 @@ export default function BuscaPage() {
         try {
             const perfil = await perfilService.getMeuPerfil();
             if (perfil && perfil.id) {
-                setUsuarioLogadoId(perfil.id);
+                setUsuarioLogadoId(perfil.usuarioId);
             }
         } catch (error) {
             console.error("Usuário não logado ou erro ao buscar perfil");

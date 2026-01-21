@@ -1,142 +1,96 @@
-// app/jogo/[id]/page.tsx
 'use client';
 
-import { useEffect, useState, use } from 'react'; // 'use' é necessário no Next 15+ para params assíncronos
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+// 🔴 CORREÇÃO: Importamos a função direta entre chaves {}, não o objeto gameService
 import { fetchGameDetails } from '@/services/gameService';
-import { Game } from '@/interfaces/Game';
+import Image from 'next/image';
 
-// No Next.js 15, params é uma Promise
-export default function JogoDetalhesPage({ params }: { params: Promise<{ id: string }> }) {
-  // Desembrulha a promise dos parâmetros (se estiver usando Next 13/14, pode ser apenas params.id direto)
-  const { id } = use(params); 
-  
-  const router = useRouter();
-  const [game, setGame] = useState<Game | null>(null);
+export default function JogoDetalhes() {
+  const { id } = useParams();
+  const [game, setGame] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     async function loadGame() {
       try {
-        const data = await fetchGameDetails(id);
-        setGame(data);
-      } catch (err) {
-        setError('Não foi possível carregar os detalhes do jogo.');
-        console.error(err);
+        // 🔴 CORREÇÃO: Chamamos a função diretamente
+        const dados = await fetchGameDetails(id as string);
+        setGame(dados);
+      } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
     }
-    loadGame();
+    
+    if (id) {
+        loadGame();
+    }
   }, [id]);
 
-  // Loading State
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center vh-100 text-light">
-        <div className="spinner-border text-primary me-3" style={{width: '3rem', height: '3rem'}} role="status"></div>
-        <span className="fs-4">Carregando Jogo...</span>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center text-white mt-5">Carregando...</div>;
+  if (!game) return <div className="text-center text-white mt-5">Jogo não encontrado.</div>;
 
-  // Error State
-  if (error || !game) {
-    return (
-      <div className="container mt-5 text-center">
-        <h2 className="text-danger mb-4">{error || 'Jogo não encontrado'}</h2>
-        <button onClick={() => router.push('/busca')} className="btn btn-outline-light btn-lg">
-          Voltar para Busca
-        </button>
-      </div>
-    );
-  }
+  // Link para traduzir a descrição no Google Tradutor
+  const googleTranslateUrl = `https://translate.google.com/?sl=en&tl=pt&text=${encodeURIComponent(game.descricao || '')}&op=translate`;
 
   return (
-    <div className="container py-5">
-        
-        {/* Botão Voltar */}
-        <div className="mb-4">
-            <button 
-                onClick={() => router.back()} 
-                className="btn btn-link text-decoration-none text-light ps-0"
-            >
-                &larr; Voltar
-            </button>
-        </div>
-
-        <div className="row g-5">
-            
-            {/* COLUNA ESQUERDA: CAPA */}
-            <div className="col-lg-4">
-                <div className="card border-0 shadow-lg overflow-hidden" style={{ backgroundColor: '#161b22' }}>
-                     <div className="position-relative w-100" style={{ minHeight: '450px' }}>
-                        {game.capaUrl ? (
-                            <Image 
-                                src={game.capaUrl} 
-                                alt={`Capa de ${game.titulo}`} 
-                                fill 
-                                style={{ objectFit: 'cover' }}
-                                priority
-                                sizes="(max-width: 768px) 100vw, 33vw"
-                            />
-                        ) : (
-                            <div className="d-flex align-items-center justify-content-center h-100 bg-secondary text-white">
-                                Sem Capa
-                            </div>
-                        )}
-                     </div>
-                </div>
+    <div className="container py-5 text-white">
+      {/* Cabeçalho com Imagem de Fundo (Blur) */}
+      <div className="position-relative mb-5" style={{ minHeight: '400px', borderRadius: '20px', overflow: 'hidden' }}>
+         {game.capaUrl && (
+             <Image 
+                src={game.capaUrl} 
+                alt={game.titulo} 
+                fill 
+                style={{ objectFit: 'cover', opacity: 0.3, zIndex: 0 }} 
+             />
+         )}
+         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-end p-5" style={{ zIndex: 1, background: 'linear-gradient(to top, #0D1117, transparent)' }}>
+            <div className="d-flex align-items-end gap-4">
+                {game.capaUrl ? (
+                    <img src={game.capaUrl} alt="Capa" style={{ width: '200px', borderRadius: '10px', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }} />
+                ) : (
+                    <div style={{ width: '200px', height: '300px', background: '#333', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Sem Capa</div>
+                )}
                 
-                {/* Botões de Ação (Futuros) */}
-                <div className="d-grid gap-2 mt-4">
-                     <button className="btn fw-bold text-white" style={{ backgroundColor: '#E839C2' }}>
-                        Adicionar à Lista
-                     </button>
-                     <button className="btn btn-outline-secondary">
-                        Editar Informações
-                     </button>
+                <div>
+                    <h1 className="display-4 fw-bold">{game.titulo}</h1>
+                    <p className="lead">{game.genero || 'Gênero não informado'} • {game.anoLancamento || 'Ano desconhecido'}</p>
                 </div>
             </div>
+         </div>
+      </div>
 
-            {/* COLUNA DIREITA: DETALHES */}
-            <div className="col-lg-8 text-light">
-                <h1 className="display-4 fw-bold mb-2 text-white">
-                    {game.titulo}
-                </h1>
-                
-                {/* Badges de Info */}
-                <div className="d-flex flex-wrap gap-3 mb-5 mt-3">
-                    <span className="badge px-3 py-2 rounded-pill border border-secondary text-secondary bg-transparent">
-                        📅 {game.anoLancamento || 'Ano Desconhecido'}
-                    </span>
-                    <span className="badge px-3 py-2 rounded-pill border border-secondary text-secondary bg-transparent">
-                        🎮 {game.plataformas || 'Plataforma não definida'}
-                    </span>
-                    <span className="badge px-3 py-2 rounded-pill border border-secondary text-secondary bg-transparent">
-                        🏷️ {game.genero || 'Gênero não definido'}
-                    </span>
-                </div>
+      {/* Sinopse */}
+      <div className="row">
+          <div className="col-md-8">
+              <h3 className="mb-3 border-bottom border-secondary pb-2">Sinopse</h3>
+              
+              {/* Descrição em Inglês */}
+              <div className="bg-dark p-4 rounded text-light-50 mb-3" style={{ whiteSpace: 'pre-wrap' }}>
+                  {/* remove tags HTML que a RAWG manda as vezes */}
+                  {game.descricao?.replace(/<[^>]*>?/gm, '') || 'Sem descrição disponível.'}
+              </div>
 
-                <div className="p-4 rounded-3 shadow-sm" style={{ backgroundColor: '#21262D', border: '1px solid #30363d' }}>
-                    <h4 className="mb-4 text-white border-bottom border-secondary pb-2 d-inline-block">
-                        Sinopse
-                    </h4>
-                    
-                    {/* Renderiza HTML se vier da RAWG, ou texto puro */}
-                    <div 
-                        className="text-muted fs-5"
-                        style={{ lineHeight: '1.8', whiteSpace: 'pre-wrap' }}
-                        dangerouslySetInnerHTML={{ 
-                            __html: game.descricao || '<p>Nenhuma descrição disponível para este jogo.</p>' 
-                        }}
-                    />
-                </div>
+              {/* Botão de Tradução */}
+              <a href={googleTranslateUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-info btn-sm">
+                 🌐 Traduzir Sinopse (Google Tradutor)
+              </a>
+          </div>
 
-            </div>
-        </div>
+          <div className="col-md-4">
+              <div className="card bg-secondary text-white p-3 border-0">
+                  <h5 className="card-title mb-3">Informações</h5>
+                  <ul className="list-unstyled">
+                      <li className="mb-2"><strong>Plataformas:</strong> <br/> {game.plataformas || 'Não informado'}</li>
+                      <li className="mb-2"><strong>Lançamento:</strong> <br/> {game.anoLancamento}</li>
+                      <li className="mb-2"><strong>ID Interno:</strong> <br/> <small className="text-muted">{game.id}</small></li>
+                  </ul>
+              </div>
+          </div>
+      </div>
     </div>
   );
 }
