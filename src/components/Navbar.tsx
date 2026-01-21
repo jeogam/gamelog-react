@@ -68,15 +68,20 @@ function Navbar() {
           {/* Menu Desktop */}
           <nav className={`${isMenuOpen ? 'flex' : 'hidden'} lg:flex flex-col lg:flex-row absolute lg:static top-20 left-0 w-full lg:w-auto bg-[#0D1117] lg:bg-transparent border-b lg:border-none border-[#30363d] p-6 lg:p-0 gap-4 items-center shadow-2xl lg:shadow-none`}>
             
-            {/* 2. Botão Sandbox agora usa .btn (ROSA) */}
+            {/* 2. Botão Sandbox */}
             <Link className="btn w-full lg:w-auto" href="/sandbox">
               Sandbox
             </Link>
 
+            {/* 👇 NOVO: Botão Explorar (Busca) 👇 */}
+            <Link className="btn w-full lg:w-auto" href="/busca">
+              Explorar
+            </Link>
+
             {isAuth ? (
               <>
-                {/* Admin pode ser btn-outline para diferenciar levemente, ou .btn se quiser tudo rosa */}
-                <Link className="btn btn w-full lg:w-auto" href="/admin">
+                {/* Admin */}
+                <Link className="btn w-full lg:w-auto" href="/admin">
                   Admin
                 </Link>
 

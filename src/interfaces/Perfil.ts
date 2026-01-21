@@ -1,12 +1,11 @@
 export interface Perfil {
-    id: number;
+    id: string; 
     nomeExibicao: string;
-    biografia: string;
-    avatarImagem: string;
+    biografia?: string;
+    avatarImagem?: string;
     usuarioId: string;
 }
 
-// Interface para atualização (sem ID, pois é pelo token)
 export interface PerfilUpdateDTO {
     nomeExibicao?: string;
     biografia?: string;

@@ -1,12 +1,14 @@
-// app/busca/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // 👈 Importante para o redirecionamento
+import { useRouter } from 'next/navigation';
 import { searchGames, importGame, SearchResult } from '@/services/gameService';
+import { bibliotecaService } from '@/services/bibliotecaService'; // 👈 Novo import
+import { perfilService } from '@/services/perfilService'; // 👈 Para pegar o ID do user
 import GameCard from '@/components/GameCard';
 import GameCardSkeleton from '@/components/GameCardSkeleton';
 
+// Hook de Debounce (manteve igual)
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -17,14 +19,34 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function BuscaPage() {
-  const router = useRouter(); // Instancia o roteador
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [importingId, setImportingId] = useState<number | null>(null);
+  
+  // Estado para guardar o ID do usuário logado
+  const [usuarioLogadoId, setUsuarioLogadoId] = useState<string | null>(null);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 600);
 
+  // 1️⃣ Ao carregar a página, descobre quem é o usuário
+  useEffect(() => {
+    async function fetchUser() {
+        try {
+            const perfil = await perfilService.getMeuPerfil();
+            if (perfil && perfil.id) {
+                setUsuarioLogadoId(perfil.id);
+            }
+        } catch (error) {
+            console.error("Usuário não logado ou erro ao buscar perfil");
+            // Opcional: router.push('/login');
+        }
+    }
+    fetchUser();
+  }, []);
+
+  // Busca de jogos (manteve igual)
   useEffect(() => {
     async function performSearch() {
       if (debouncedSearchTerm.length >= 2) {
@@ -44,19 +66,42 @@ export default function BuscaPage() {
     performSearch();
   }, [debouncedSearchTerm]);
 
-  // 🟢 LÓGICA DO CLIQUE
+  // 🟢 2️⃣ NOVA LÓGICA DO CLIQUE (IMPORTAR + VINCULAR)
   const handleImport = async (game: SearchResult) => {
-    setImportingId(game.id); // Ativa o estado de loading no botão específico
+    if (!usuarioLogadoId) {
+        alert("Você precisa estar logado para adicionar jogos!");
+        router.push('/login');
+        return;
+    }
+
+    setImportingId(game.id);
     try {
-      // 1. Chama o serviço (POST)
-      const novoJogo = await importGame(game);
+      // PASSO A: Importar o jogo para o banco local (Tabela Jogos)
+      // O Back-end verifica se já existe e devolve o UUID
+      const jogoSalvo = await importGame(game);
+      console.log("Jogo salvo/recuperado com UUID:", jogoSalvo.id);
+
+      // PASSO B: Vincular o jogo à biblioteca do usuário (Tabela Biblioteca)
+      await bibliotecaService.adicionarJogo({
+          usuarioId: usuarioLogadoId,
+          jogoId: jogoSalvo.id, // Usa o UUID retornado pelo passo A
+          status: 'QUERO_JOGAR', // Status padrão ao adicionar
+          favorito: false
+      });
       
-      // 2. Sucesso: Redireciona para a página de detalhes usando o UUID interno
-      // Ex: /jogo/550e8400-e29b-41d4-a716-446655440000
-      router.push(`/jogo/${novoJogo.id}`);
+      alert(`"${game.name}" foi adicionado à sua biblioteca!`);
+      
+      // Redireciona para a biblioteca (Home) ou Detalhes
+      router.push('/home'); 
       
     } catch (error: any) {
-      alert(`Erro: ${error.message}`);
+      console.error(error);
+      // Tratamento amigável: Se o jogo já estiver na lib, avisa o usuário
+      if (error.message?.includes("já está na biblioteca")) {
+          alert("Você já possui esse jogo na sua biblioteca.");
+      } else {
+          alert(`Erro ao adicionar: ${error.message}`);
+      }
     } finally {
       setImportingId(null);
     }
@@ -91,7 +136,6 @@ export default function BuscaPage() {
 
         {!loading && results.map((game) => (
           <div className="col" key={game.id}>
-            {/* Passamos a função handleImport para o componente */}
             <GameCard 
                 game={game} 
                 onImport={handleImport} 

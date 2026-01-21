@@ -1,72 +1,85 @@
-// app/home/page.tsx
+'use client';
 
-import Link from 'next/link'
-import Image from 'next/image'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-function Home() {
+// 🔴 CORREÇÃO AQUI: Importamos a função diretamente, entre chaves
+import { getJogosSalvos } from '@/services/gameService'; 
+
+import GameCard from '@/components/GameCard';
+import GameCardSkeleton from '@/components/GameCardSkeleton';
+
+// Interface ajustada para o que vem do SEU banco (UUID é string)
+interface JogoLocal {
+  id: string; 
+  titulo: string;
+  capaUrl: string;
+  genero: string;
+  anoLancamento: number;
+}
+
+export default function Home() {
+  const router = useRouter();
+  const [jogos, setJogos] = useState<JogoLocal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJogosLocais() {
+      try {
+        // 🔴 CORREÇÃO AQUI: Chamamos a função direto, sem "gameService." antes
+        const data: any = await getJogosSalvos(); 
+        setJogos(data);
+      } catch (error) {
+        console.error("Erro ao carregar biblioteca:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchJogosLocais();
+  }, []);
+
+  const handleCardClick = (id: string | number) => {
+    router.push(`/jogo/${id}`);
+  };
+
   return (
-    <div className="mt-4">
-      <h2 className="text-center mb-4">Jogos em Destaque</h2>
+    <div className="container py-5">
+      <h2 className="text-center mb-5 fw-bold" style={{ color: '#F0F6FC' }}>
+        Sua Biblioteca de Jogos
+      </h2>
 
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        
-        {/* Card 1: Hades */}
-        <div className="col">
-          <Link href="/hades" className="card h-100 text-decoration-none text-light">
-            <Image 
-                src="/images/jogos/hades-thumbnail.jpg" 
-                className="card-img-top" 
-                alt="Thumbnail do jogo Hades" 
-                width={400} 
-                height={225} 
-            />
-            <div className="card-body bg-dark">
-              <h5 className="card-title">Hades</h5>
-              <p className="card-text text-muted">Gênero: Roguelike, Ação</p>
-              <p className="card-text">Avaliação: ---</p>
-            </div>
-          </Link>
+      {loading ? (
+        <div className="row row-cols-1 row-cols-md-3 g-4">
+           <GameCardSkeleton />
+           <GameCardSkeleton />
+           <GameCardSkeleton />
         </div>
-
-        {/* Card 2: Bloons TD 6 */}
-        <div className="col">
-          <Link href="/btd6" className="card h-100 text-decoration-none text-light">
-            <Image 
-                src="/images/jogos/btd6-thumbnail.jpg" 
-                className="card-img-top" 
-                alt="Thumbnail do jogo BTD6" 
-                width={400} 
-                height={225} 
-            />
-            <div className="card-body bg-dark">
-              <h5 className="card-title">Bloons TD 6</h5>
-              <p className="card-text text-muted">Gênero: Tower Defense</p>
-              <p className="card-text">Avaliação: ---</p>
-            </div>
-          </Link>
+      ) : jogos.length === 0 ? (
+        <div className="text-center text-muted mt-5">
+          <p>Nenhum jogo na biblioteca ainda.</p>
+          <a href="/busca" className="btn btn-outline-primary">
+            Importar Jogos
+          </a>
         </div>
-
-        {/* Card 3: Elden Ring */}
-        <div className="col">
-          <Link href="/elden-ring" className="card h-100 text-decoration-none text-light">
-            <Image 
-                src="/images/jogos/elden-ring-thumbnail.jpg" 
-                className="card-img-top" 
-                alt="Thumbnail do jogo Elden Ring" 
-                width={400} 
-                height={225} 
-            />
-            <div className="card-body bg-dark">
-              <h5 className="card-title">Elden Ring</h5>
-              <p className="card-text text-muted">Gênero: RPG de Ação</p>
-              <p className="card-text">Avaliação: ---</p>
+      ) : (
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+          {jogos.map((jogo) => (
+            <div className="col" key={jogo.id}>
+              <GameCard 
+                game={{
+                    id: jogo.id,
+                    name: jogo.titulo,
+                    background_image: jogo.capaUrl,
+                    released: String(jogo.anoLancamento)
+                }}
+                onImport={() => handleCardClick(jogo.id)}
+                isImporting={false} 
+              />
             </div>
-          </Link>
+          ))}
         </div>
-
-      </div>
+      )}
     </div>
   )
 }
-
-export default Home
