@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { searchGames, importGame, SearchResult } from '@/services/gameService';
-import { bibliotecaService } from '@/services/bibliotecaService'; // 👈 Novo import
-import { perfilService } from '@/services/perfilService'; // 👈 Para pegar o ID do user
-import GameCard from '@/components/GameCard';
-import GameCardSkeleton from '@/components/GameCardSkeleton';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { searchGames, importGame, SearchResult } from "@/services/gameService";
+import { bibliotecaService } from "@/services/bibliotecaService";
+import { perfilService } from "@/services/perfilService";
+import GameCard from "@/components/GameCard";
+import GameCardSkeleton from "@/components/GameCardSkeleton";
 
-// Hook de Debounce (manteve igual)
+// Hook de Debounce
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -20,42 +20,54 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function BuscaPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchParams = useSearchParams();
+
+  // Lê o ?q= da URL (padrão da navbar)
+  const initialQ = useMemo(
+    () => (searchParams.get("q") || "").trim(),
+    [searchParams],
+  );
+
+  const [searchTerm, setSearchTerm] = useState(initialQ);
+  const debouncedSearchTerm = useDebounce(searchTerm, 600);
+
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [importingId, setImportingId] = useState<number | null>(null);
-  
-  // Estado para guardar o ID do usuário logado
+
   const [usuarioLogadoId, setUsuarioLogadoId] = useState<string | null>(null);
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 600);
+  // Se a URL mudar (ex: usuário pesquisou pela navbar), sincroniza o input
+  useEffect(() => {
+    setSearchTerm(initialQ);
+  }, [initialQ]);
 
-  // 1️⃣ Ao carregar a página, descobre quem é o usuário
+  // Descobre usuário logado
   useEffect(() => {
     async function fetchUser() {
-        try {
-            const perfil = await perfilService.getMeuPerfil();
-            if (perfil && perfil.id) {
-                setUsuarioLogadoId(perfil.usuarioId);
-            }
-        } catch (error) {
-            console.error("Usuário não logado ou erro ao buscar perfil");
-            // Opcional: router.push('/login');
-        }
+      try {
+        const perfil = await perfilService.getMeuPerfil();
+        if (perfil?.usuarioId) setUsuarioLogadoId(perfil.usuarioId);
+      } catch {
+        // não logado -> ok
+      }
     }
     fetchUser();
   }, []);
 
-  // Busca de jogos (manteve igual)
+  // Busca
   useEffect(() => {
     async function performSearch() {
-      if (debouncedSearchTerm.length >= 2) {
+      const term = debouncedSearchTerm.trim();
+
+      if (term.length >= 2) {
         setLoading(true);
         try {
-          const data = await searchGames(debouncedSearchTerm);
+          const data = await searchGames(term);
           setResults(data);
         } catch (error) {
           console.error("Erro busca:", error);
+          setResults([]);
         } finally {
           setLoading(false);
         }
@@ -63,44 +75,45 @@ export default function BuscaPage() {
         setResults([]);
       }
     }
+
     performSearch();
   }, [debouncedSearchTerm]);
 
-  // 🟢 2️⃣ NOVA LÓGICA DO CLIQUE (IMPORTAR + VINCULAR)
+  // Enter => /busca?q=...
+  const onSubmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchTerm.trim();
+    if (!q) return;
+    router.push(`/busca?q=${encodeURIComponent(q)}`);
+  };
+
+  // Importar + vincular biblioteca
   const handleImport = async (game: SearchResult) => {
     if (!usuarioLogadoId) {
-        alert("Você precisa estar logado para adicionar jogos!");
-        router.push('/login');
-        return;
+      alert("Você precisa estar logado para adicionar jogos!");
+      router.push("/login");
+      return;
     }
 
     setImportingId(game.id);
     try {
-      // PASSO A: Importar o jogo para o banco local (Tabela Jogos)
-      // O Back-end verifica se já existe e devolve o UUID
       const jogoSalvo = await importGame(game);
-      console.log("Jogo salvo/recuperado com UUID:", jogoSalvo.id);
 
-      // PASSO B: Vincular o jogo à biblioteca do usuário (Tabela Biblioteca)
       await bibliotecaService.adicionarJogo({
-          usuarioId: usuarioLogadoId,
-          jogoId: jogoSalvo.id, // Usa o UUID retornado pelo passo A
-          status: 'QUERO_JOGAR', // Status padrão ao adicionar
-          favorito: false
+        usuarioId: usuarioLogadoId,
+        jogoId: jogoSalvo.id,
+        status: "QUERO_JOGAR",
+        favorito: false,
       });
-      
+
       alert(`"${game.name}" foi adicionado à sua biblioteca!`);
-      
-      // Redireciona para a biblioteca (Home) ou Detalhes
-      router.push('/home'); 
-      
+      router.push("/home");
     } catch (error: any) {
       console.error(error);
-      // Tratamento amigável: Se o jogo já estiver na lib, avisa o usuário
-      if (error.message?.includes("já está na biblioteca")) {
-          alert("Você já possui esse jogo na sua biblioteca.");
+      if (error?.message?.includes("já está na biblioteca")) {
+        alert("Você já possui esse jogo na sua biblioteca.");
       } else {
-          alert(`Erro ao adicionar: ${error.message}`);
+        alert(`Erro ao adicionar: ${error?.message || "Erro inesperado"}`);
       }
     } finally {
       setImportingId(null);
@@ -108,42 +121,53 @@ export default function BuscaPage() {
   };
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center mb-5">
-        <div className="col-lg-8 text-center">
-          <h1 className="fw-bold mb-4" style={{ color: '#F0F6FC' }}>
-            Explorar Catálogo <span style={{color: '#E839C2'}}>.</span>
-          </h1>
-          <input
-            type="text"
-            className="form-control form-control-lg text-center"
-            placeholder="Digite o nome do jogo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-               background: '#21262D', color: '#fff', 
-               border: '1px solid #30363d', borderRadius: '50px', 
-               padding: '1.2rem', fontSize: '1.2rem'
-            }}
-          />
+    <main className="app-container py-10 sm:py-12">
+      {/* Cabeçalho */}
+      <div className="mx-auto max-w-2xl text-center">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+          Explorar Catálogo <span className="text-[#E839C2]">.</span>
+        </h1>
+      </div>
+
+      {/* Resultado / estado vazio */}
+      <div className="mt-10">
+        {!loading && results.length === 0 && searchTerm.trim().length < 2 && (
+          <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <p className="text-white/70">
+              Digite pelo menos{" "}
+              <span className="text-white/85 font-medium">2 caracteres</span>{" "}
+              para começar.
+            </p>
+          </div>
+        )}
+
+        {!loading && results.length === 0 && searchTerm.trim().length >= 2 && (
+          <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <p className="text-white/75">Nenhum jogo encontrado para:</p>
+            <p className="mt-1 text-white font-semibold">
+              “{searchTerm.trim()}”
+            </p>
+          </div>
+        )}
+
+        {/* Grid de cards */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {loading &&
+            Array.from({ length: 8 }).map((_, i) => (
+              <GameCardSkeleton key={i} />
+            ))}
+
+          {!loading &&
+            results.map((game) => (
+              <GameCard
+                key={game.id}
+                game={game}
+                onImport={handleImport}
+                isImporting={importingId === game.id}
+              />
+            ))}
         </div>
       </div>
-
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-        {loading && Array.from({ length: 4 }).map((_, i) => (
-             <div className="col" key={i}><GameCardSkeleton /></div>
-        ))}
-
-        {!loading && results.map((game) => (
-          <div className="col" key={game.id}>
-            <GameCard 
-                game={game} 
-                onImport={handleImport} 
-                isImporting={importingId === game.id} 
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    </main>
   );
 }

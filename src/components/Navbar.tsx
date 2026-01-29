@@ -1,124 +1,497 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { perfilService } from '../services/perfilService'
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { perfilService } from "../services/perfilService";
 
 const DefaultAvatar = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
   </svg>
-)
+);
 
 function Navbar() {
-  const router = useRouter()
-  const [isAuth, setIsAuth] = useState(false)
-  const [userAvatar, setUserAvatar] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const router = useRouter();
+
+  const [isAuth, setIsAuth] = useState(false);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Busca
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // UI states
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setMounted(true)
-    const token = localStorage.getItem('gamelog_token')
-    
+    setMounted(true);
+
+    const token = localStorage.getItem("gamelog_token");
     if (token) {
-      setIsAuth(true)
-      perfilService.getMeuPerfil()
-        .then(perfil => {
-          if (perfil && perfil.avatarImagem) {
-            setUserAvatar(perfil.avatarImagem)
-          }
+      setIsAuth(true);
+      perfilService
+        .getMeuPerfil()
+        .then((perfil) => {
+          if (perfil && perfil.avatarImagem) setUserAvatar(perfil.avatarImagem);
         })
-        .catch(console.error)
+        .catch(console.error);
     }
-  }, [])
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('gamelog_token')
-    localStorage.removeItem('gamelog_user')
-    setIsAuth(false)
-    setUserAvatar(null)
-    router.push('/login')
-    router.refresh()
-  }
+    localStorage.removeItem("gamelog_token");
+    localStorage.removeItem("gamelog_user");
+    setIsAuth(false);
+    setUserAvatar(null);
+    router.push("/login");
+    router.refresh();
+  };
 
-  if (!mounted) return <div className="h-20 bg-[#0D1117]"></div>;
+  // Detecta role ADMINISTRADOR a partir do localStorage
+  const hasAdminRole = () => {
+    try {
+      const raw = localStorage.getItem("gamelog_user");
+      if (!raw) return false;
+      const user = JSON.parse(raw);
+
+      // formatos comuns:
+      // user.roles = ["ADMINISTRADOR"] ou ["ROLE_ADMINISTRADOR"]
+      // user.role = "ADMINISTRADOR"
+      const roles: string[] = Array.isArray(user?.roles)
+        ? user.roles
+        : user?.role
+          ? [user.role]
+          : [];
+
+      return roles.some(
+        (r) => r === "ADMINISTRADOR" || r === "ROLE_ADMINISTRADOR",
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const isAdmin = useMemo(() => {
+    if (!mounted || !isAuth) return false;
+    return hasAdminRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, isAuth]);
+
+  const goToSearch = (term: string) => {
+    const q = term.trim();
+    router.push(`/busca?q=${encodeURIComponent(q)}`);
+  };
+
+  const onSubmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+    goToSearch(searchTerm);
+    setIsDrawerOpen(false);
+  };
+
+  // Fecha dropdown ao clicar fora / ESC
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const onDocClick = (ev: MouseEvent) => {
+      const target = ev.target as Node;
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isUserMenuOpen]);
+
+  // Bloqueia scroll do body quando drawer abre
+  useEffect(() => {
+    if (!mounted) return;
+    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen, mounted]);
+
+  if (!mounted) return <div className="h-20 bg-[#0D1117]" />;
 
   return (
     <>
-      {/* 1. Navbar com a classe .navbar-custom que definimos no CSS */}
-      <header className="navbar-custom flex items-center justify-center">
-        <div className="container mx-auto px-4 flex items-center justify-between h-full">
-          
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0D1117]/80 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
           {/* Logo */}
-          <Link className="text-2xl font-bold text-white no-underline hover:text-[#E839C2] transition-colors" href="/">
+          <Link
+            href="/"
+            className="text-xl font-semibold tracking-tight text-white hover:text-[#E839C2] transition-colors"
+          >
             👾 GameLog
           </Link>
 
-          {/* Botão Mobile */}
-          <button 
-            className="lg:hidden text-white focus:outline-none"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          {/* Busca (Desktop) */}
+          <form
+            onSubmit={onSubmitSearch}
+            className="hidden lg:flex flex-1 justify-center px-6"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-          </button>
+            <div className="relative w-full max-w-md">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/50">
+                {/* ícone lupa */}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </span>
 
-          {/* Menu Desktop */}
-          <nav className={`${isMenuOpen ? 'flex' : 'hidden'} lg:flex flex-col lg:flex-row absolute lg:static top-20 left-0 w-full lg:w-auto bg-[#0D1117] lg:bg-transparent border-b lg:border-none border-[#30363d] p-6 lg:p-0 gap-4 items-center shadow-2xl lg:shadow-none`}>
-            
-            {/* 2. Botão Sandbox */}
-            <Link className="btn w-full lg:w-auto" href="/sandbox">
-              Sandbox
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar jogos..."
+                className="w-full rounded-full border border-white/10 bg-white/5 px-10 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#E839C2]/70 focus:ring-2 focus:ring-[#E839C2]/20 transition"
+              />
+            </div>
+          </form>
+
+          {/* Ações (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-2">
+            <Link
+              href="/biblioteca"
+              className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
+            >
+              Biblioteca
             </Link>
 
-            {/* 👇 NOVO: Botão Explorar (Busca) 👇 */}
-            <Link className="btn w-full lg:w-auto" href="/busca">
-              Explorar
+            <Link
+              href="/listas"
+              className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
+            >
+              Listas
             </Link>
 
-            {isAuth ? (
+            {/* Admin + Sandbox somente ADMIN */}
+            {isAuth && isAdmin && (
               <>
-                {/* Admin */}
-                <Link className="btn w-full lg:w-auto" href="/admin">
+                <Link
+                  href="/admin"
+                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
+                >
                   Admin
                 </Link>
-
-                <Link 
-                  href="/perfil" 
-                  className="block rounded-full overflow-hidden border-2 border-[#E839C2] bg-[#21262D] text-[#E839C2] flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_10px_rgba(232,57,194,0.5)]"
-                  style={{ width: '42px', height: '42px', minWidth: '42px' }}
+                <Link
+                  href="/sandbox"
+                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
                 >
-                  {userAvatar ? (
-                    <img src={userAvatar} alt="Perfil" className="w-full h-full object-cover" />
-                  ) : (
-                    <DefaultAvatar />
-                  )}
-                </Link>
-
-                <button className="btn btn-danger w-full lg:w-auto" onClick={handleLogout}>
-                  Sair
-                </button>
-              </>
-            ) : (
-              <>
-                <Link className="btn w-full lg:w-auto" href="/login">
-                  Login
-                </Link>
-                <Link className="btn btn-outline w-full lg:w-auto" href="/register">
-                  Cadastrar
+                  Sandbox
                 </Link>
               </>
             )}
+
+            {/* Auth actions */}
+            {!isAuth ? (
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-full px-4 py-2 text-sm font-medium text-[#E839C2] border border-[#E839C2]/50 hover:border-[#E839C2] hover:bg-[#E839C2]/10 transition"
+                >
+                  Cadastrar
+                </Link>
+              </>
+            ) : (
+              // Avatar + dropdown (o mais à direita)
+              <div className="relative ml-2" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((v) => !v)}
+                  className="
+    h-10 w-10 min-w-10 aspect-square p-0 leading-none
+    !rounded-full !overflow-hidden
+    border border-[#E839C2]/60
+    bg-white/5 hover:bg-white/10
+    transition flex items-center justify-center
+  "
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  title="Menu do usuário"
+                >
+                  {userAvatar ? (
+                    <img
+                      src={userAvatar}
+                      alt="Perfil"
+                      className="block h-full w-full !rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[#E839C2]">
+                      <DefaultAvatar />
+                    </span>
+                  )}
+                </button>
+
+                {isUserMenuOpen && (
+                  <div
+                    className="absolute right-0 mt-3 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0D1117]/95 backdrop-blur-md shadow-2xl"
+                    role="menu"
+                  >
+                    <Link
+                      href="/perfil"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                      role="menuitem"
+                    >
+                      Meu Perfil
+                    </Link>
+                    <Link
+                      href="/configuracoes"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                      role="menuitem"
+                    >
+                      Configurações
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-white/90 hover:bg-white/5 transition"
+                      role="menuitem"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
+
+          {/* Mobile: botão hamburger */}
+          <button
+            className="lg:hidden inline-flex items-center justify-center rounded-full p-2 text-white/90 hover:bg-white/5 transition"
+            onClick={() => setIsDrawerOpen(true)}
+            aria-label="Abrir menu"
+          >
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </div>
       </header>
-      
-      {/* Espaçador para o conteúdo não ficar atrás da navbar */}
-      <div className="h-20"></div>
+
+      {/* Drawer Mobile */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          {/* overlay */}
+          <button
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+            onClick={() => setIsDrawerOpen(false)}
+            aria-label="Fechar menu"
+          />
+
+          {/* painel */}
+          <aside className="absolute right-0 top-0 h-full w-[85%] max-w-sm border-l border-white/10 bg-[#0D1117]/95 backdrop-blur-md shadow-2xl">
+            <div className="flex items-center justify-between px-5 h-20 border-b border-white/10">
+              <span className="text-white font-semibold">Menu</span>
+              <button
+                onClick={() => setIsDrawerOpen(false)}
+                className="rounded-full p-2 text-white/90 hover:bg-white/5 transition"
+                aria-label="Fechar"
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path strokeLinecap="round" d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* Busca (Mobile) */}
+              <form onSubmit={onSubmitSearch}>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/50">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
+                  </span>
+
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar jogos..."
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-10 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#E839C2]/70 focus:ring-2 focus:ring-[#E839C2]/20 transition"
+                  />
+                </div>
+              </form>
+
+              {/* Links */}
+              <div className="space-y-2">
+                <Link
+                  href="/biblioteca"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                >
+                  Biblioteca
+                </Link>
+                <Link
+                  href="/listas"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                >
+                  Listas
+                </Link>
+
+                {isAuth && isAdmin && (
+                  <>
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Admin
+                    </Link>
+                    <Link
+                      href="/sandbox"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Sandbox
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              {/* Sessão usuário */}
+              <div className="border-t border-white/10 pt-4">
+                {!isAuth ? (
+                  <div className="space-y-2">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-[#E839C2] border border-[#E839C2]/50 hover:border-[#E839C2] hover:bg-[#E839C2]/10 transition"
+                    >
+                      Cadastrar
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 px-2">
+                      <div className="h-10 w-10 overflow-hidden rounded-full border border-[#E839C2]/60 bg-white/5 flex items-center justify-center">
+                        {userAvatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={userAvatar}
+                            alt="Perfil"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[#E839C2]">
+                            <DefaultAvatar />
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm text-white/80">Conta</span>
+                    </div>
+
+                    <Link
+                      href="/perfil"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Meu Perfil
+                    </Link>
+
+                    <Link
+                      href="/configuracoes"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Configurações
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsDrawerOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Espaçador */}
+      <div className="h-20" />
     </>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;
