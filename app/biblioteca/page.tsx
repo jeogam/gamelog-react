@@ -2,12 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { bibliotecaService } from "@/services/bibliotecaService";
+import { bibliotecaService, type StatusJogo } from "@/services/bibliotecaService";
 import { perfilService } from "@/services/perfilService";
 import GameCard from "@/components/GameCard";
 import GameCardSkeleton from "@/components/GameCardSkeleton";
-
-type StatusJogo = "QUERO_JOGAR" | "JOGANDO" | "FINALIZADO" | "DESISTIDO";
 
 interface ItemBiblioteca {
   id: string;
@@ -26,13 +24,16 @@ export default function BibliotecaPage() {
   const fetchDados = useCallback(async () => {
     try {
       setLoading(true);
-      const perfil = await perfilService.getMeuPerfil();
 
-      const usuarioId = String((perfil as any)?.usuarioId);
-      if (!usuarioId) {
+      const perfil = await perfilService.getMeuPerfil();
+      const rawId = (perfil as any)?.usuarioId;
+
+      if (!rawId) {
         router.push("/login");
         return;
       }
+
+      const usuarioId = String(rawId);
 
       const dadosBrutos = await bibliotecaService.getBibliotecaDoUsuario(usuarioId);
 
@@ -76,7 +77,7 @@ export default function BibliotecaPage() {
             id: item.jogoId,
             name: item.tituloJogo,
             background_image: item.capaUrl,
-            status: item.status,       // ✅ agora aparece
+            status: item.status,
             favorito: item.favorito,
           }}
           onViewDetails={() => router.push(`/jogo/${item.jogoId}`)}
