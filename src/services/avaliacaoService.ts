@@ -22,6 +22,8 @@ export type AvaliacaoResponseDTO = {
   comentario: string;
   usuarioId: string;
   jogoId: string;
+  nomeExibicao?: string;
+  avatarImagem?: string;
   createdAt?: string;
 };
 

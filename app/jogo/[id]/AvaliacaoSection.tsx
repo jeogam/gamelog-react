@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { perfilService } from "@/services/perfilService";
-import { listarAvaliacoesDoJogo, AvaliacaoResponseDTO } from "@/services/avaliacaoService";
-import AvaliacaoForm from "@/components/AvaliacaoForm";
+import Link from "next/link";
 import { Star } from "lucide-react";
+
+import { perfilService } from "@/services/perfilService";
+import {
+  listarAvaliacoesDoJogo,
+  AvaliacaoResponseDTO,
+} from "@/services/avaliacaoService";
+import AvaliacaoForm from "@/components/AvaliacaoForm";
 
 type Props = {
   jogoId: string;
@@ -27,6 +32,43 @@ function StarsView({ value }: { value: number }) {
   );
 }
 
+function Avatar({
+  src,
+  alt,
+  size = 36,
+}: {
+  src?: string;
+  alt: string;
+  size?: number;
+}) {
+  const [broken, setBroken] = useState(false);
+  const s = `${size}px`;
+
+  if (!src || broken) {
+    return (
+      <div
+        style={{ width: s, height: s }}
+        className="grid place-items-center rounded-full border border-white/10 bg-zinc-900 text-xs font-bold text-zinc-200"
+        aria-label={alt}
+        title={alt}
+      >
+        {alt?.trim()?.slice(0, 1)?.toUpperCase() || "?"}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{ width: s, height: s }}
+      className="rounded-full border border-white/10 object-cover"
+      onError={() => setBroken(true)}
+      loading="lazy"
+    />
+  );
+}
+
 export default function AvaliacaoSection({ jogoId }: Props) {
   const [usuarioId, setUsuarioId] = useState<string | undefined>(undefined);
 
@@ -37,7 +79,6 @@ export default function AvaliacaoSection({ jogoId }: Props) {
   async function loadUsuario() {
     try {
       const perfil = await perfilService.getMeuPerfil();
-      // ✅ precisa ser UUID do usuário
       const uid = (perfil as any)?.usuarioId;
       if (uid) setUsuarioId(String(uid));
     } catch {
@@ -72,11 +113,7 @@ export default function AvaliacaoSection({ jogoId }: Props) {
   return (
     <section className="space-y-4">
       {/* FORM */}
-      <AvaliacaoForm
-        jogoId={jogoId}
-        usuarioId={usuarioId}
-        onSuccess={() => loadAvaliacoes()}
-      />
+      <AvaliacaoForm jogoId={jogoId} usuarioId={usuarioId} onSuccess={loadAvaliacoes} />
 
       {/* LISTAGEM */}
       <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
@@ -101,30 +138,47 @@ export default function AvaliacaoSection({ jogoId }: Props) {
           </p>
         ) : (
           <div className="mt-4 space-y-3">
-            {avaliacoes.map((av) => (
-              <div
-                key={av.id}
-                className="rounded-xl border border-white/10 bg-zinc-950/30 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
+            {avaliacoes.map((av) => {
+              const nome = av.nomeExibicao?.trim() || "Usuário";
+              const data = av.createdAt
+                ? new Date(av.createdAt).toLocaleDateString("pt-BR")
+                : null;
+
+              return (
+                <div
+                  key={av.id}
+                  className="rounded-xl border border-white/10 bg-zinc-950/30 p-4"
+                >
+                  {/* topo: autor + data */}
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <Link
+                      href={`/perfil/${av.usuarioId}`}
+                      className="group flex items-center gap-3"
+                    >
+                      <Avatar src={av.avatarImagem} alt={nome} size={36} />
+                      <div className="leading-tight">
+                        <div className="text-sm font-semibold text-zinc-100 group-hover:underline">
+                          {nome}
+                        </div>
+                        <div className="text-xs text-zinc-500">Ver perfil</div>
+                      </div>
+                    </Link>
+
+                    {data ? (
+                      <div className="text-right text-xs text-zinc-500">{data}</div>
+                    ) : null}
+                  </div>
+
+                  {/* conteúdo */}
+                  <div className="space-y-2">
                     <StarsView value={av.nota} />
                     <p className="text-sm text-zinc-200 whitespace-pre-wrap">
                       {av.comentario || "Sem comentário."}
                     </p>
                   </div>
-
-                  <div className="text-right text-xs text-zinc-500">
-                    <div className="truncate max-w-[140px]">
-                      {av.usuarioId?.slice(0, 8)}…
-                    </div>
-                    {av.createdAt ? (
-                      <div>{new Date(av.createdAt).toLocaleDateString("pt-BR")}</div>
-                    ) : null}
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
