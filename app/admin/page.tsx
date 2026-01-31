@@ -6,6 +6,35 @@ import { authService } from "@/services/authService";
 import { adminUsuarioService } from "@/services/adminUsuarioService";
 import type { PapelUsuario, UsuarioAdmin } from "@/interfaces/UsuarioAdmin";
 
+// ✅ Componente Avatar local (igual ao usado nas avaliações)
+function Avatar({ src, alt, size = 40 }: { src?: string; alt: string; size?: number }) {
+  const [broken, setBroken] = useState(false);
+  const s = `${size}px`;
+
+  if (!src || broken) {
+    return (
+      <div
+        style={{ width: s, height: s, minWidth: s }}
+        className="grid place-items-center rounded-full border border-white/10 bg-zinc-800 text-xs font-bold text-zinc-300"
+        title={alt}
+      >
+        {alt?.trim()?.slice(0, 1)?.toUpperCase() || "?"}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{ width: s, height: s, minWidth: s }}
+      className="rounded-full border border-white/10 object-cover"
+      onError={() => setBroken(true)}
+      loading="lazy"
+    />
+  );
+}
+
 const ROLES: PapelUsuario[] = ["ADMINISTRADOR", "MODERADOR", "USUARIO"];
 
 type RowState = {
@@ -25,7 +54,6 @@ export default function AdminPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  // estado por linha (role draft + loading de ações)
   const [rows, setRows] = useState<Record<string, RowState>>({});
 
   const handleLogout = () => authService.logout();
@@ -44,7 +72,6 @@ export default function AdminPage() {
       setTotalPages(data.totalPages);
       setTotalElements(data.totalElements);
 
-      // inicializa estado por linha
       const nextRows: Record<string, RowState> = {};
       for (const u of data.content) {
         nextRows[u.id] = {
@@ -91,22 +118,17 @@ export default function AdminPage() {
     if (!row) return;
 
     const novoPapel = row.roleDraft;
-    if (novoPapel === u.papel) return; // nada a fazer
+    if (novoPapel === u.papel) return;
 
-    // trava UI da linha
     setRows((prev) => ({ ...prev, [u.id]: { ...prev[u.id], saving: true } }));
     setErro(null);
 
     try {
       const updated = await adminUsuarioService.atualizarPapel(u.id, novoPapel);
-
-      // atualiza lista
       setItems((prev) => prev.map((x) => (x.id === u.id ? { ...x, papel: updated.papel } : x)));
-      // sincroniza draft com o que o backend respondeu
       setRows((prev) => ({ ...prev, [u.id]: { ...prev[u.id], roleDraft: updated.papel, saving: false } }));
     } catch (e: any) {
       setErro(e?.response?.data?.message || "Não foi possível atualizar o papel.");
-      // desfaz loading
       setRows((prev) => ({ ...prev, [u.id]: { ...prev[u.id], saving: false, roleDraft: u.papel } }));
     }
   }
@@ -120,12 +142,7 @@ export default function AdminPage() {
 
     try {
       await adminUsuarioService.excluirUsuario(u.id);
-
-      // remove da lista atual
       setItems((prev) => prev.filter((x) => x.id !== u.id));
-
-      // se a página ficou vazia (ex: apagou o último item), volta 1 página e recarrega
-      // (não garante 100% sem totalElements atualizado, mas melhora UX)
       setTimeout(() => {
         load();
       }, 0);
@@ -215,14 +232,19 @@ export default function AdminPage() {
                       const roleDraft = row?.roleDraft ?? u.papel;
                       const saving = row?.saving ?? false;
                       const deleting = row?.deleting ?? false;
-
                       const changed = roleDraft !== u.papel;
 
                       return (
                         <tr key={u.id} className="text-sm text-zinc-200">
                           <td className="px-4 py-3">
-                            <div className="font-semibold text-zinc-100">{u.nome}</div>
-                            <div className="mt-0.5 text-xs text-zinc-500">ID: {u.id}</div>
+                            {/* ✅ Adicionado Avatar ao lado do nome */}
+                            <div className="flex items-center gap-3">
+                                <Avatar src={u.avatarImagem} alt={u.nome} size={40} />
+                                <div>
+                                    <div className="font-semibold text-zinc-100">{u.nome}</div>
+                                    <div className="mt-0.5 text-xs text-zinc-500">ID: {u.id}</div>
+                                </div>
+                            </div>
                           </td>
 
                           <td className="px-4 py-3 text-zinc-300">{u.email}</td>
@@ -268,8 +290,8 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-
-            <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-xs text-zinc-500">
+            
+             <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-xs text-zinc-500">
               <span>
                 Mostrando <span className="text-zinc-200">{items.length}</span> item(ns) nesta página
               </span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { perfilService } from "../services/perfilService";
+import type { Perfil } from "@/interfaces/Perfil";
 
 const DefaultAvatar = () => (
   <svg
@@ -27,6 +28,10 @@ function Navbar() {
 
   const [isAuth, setIsAuth] = useState(false);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  // ✅ papel real vindo do Perfil (/perfis/meu-perfil)
+  const [papel, setPapel] = useState<Perfil["papel"] | null>(null);
+
   const [mounted, setMounted] = useState(false);
 
   // Busca
@@ -44,12 +49,19 @@ function Navbar() {
     const token = localStorage.getItem("gamelog_token");
     if (token) {
       setIsAuth(true);
+
       perfilService
         .getMeuPerfil()
         .then((perfil) => {
-          if (perfil && perfil.avatarImagem) setUserAvatar(perfil.avatarImagem);
+          if (perfil?.avatarImagem) setUserAvatar(perfil.avatarImagem);
+
+          // ✅ aqui é o mais importante
+          setPapel(perfil?.papel ?? null);
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          setPapel(null);
+        });
     }
   }, []);
 
@@ -58,39 +70,16 @@ function Navbar() {
     localStorage.removeItem("gamelog_user");
     setIsAuth(false);
     setUserAvatar(null);
+    setPapel(null); // ✅
     router.push("/login");
     router.refresh();
   };
 
-  // Detecta role ADMINISTRADOR a partir do localStorage
-  const hasAdminRole = () => {
-    try {
-      const raw = localStorage.getItem("gamelog_user");
-      if (!raw) return false;
-      const user = JSON.parse(raw);
-
-      // formatos comuns:
-      // user.roles = ["ADMINISTRADOR"] ou ["ROLE_ADMINISTRADOR"]
-      // user.role = "ADMINISTRADOR"
-      const roles: string[] = Array.isArray(user?.roles)
-        ? user.roles
-        : user?.role
-          ? [user.role]
-          : [];
-
-      return roles.some(
-        (r) => r === "ADMINISTRADOR" || r === "ROLE_ADMINISTRADOR",
-      );
-    } catch {
-      return false;
-    }
-  };
-
+  // ✅ Admin só se papel for ADMINISTRADOR
   const isAdmin = useMemo(() => {
     if (!mounted || !isAuth) return false;
-    return hasAdminRole();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mounted, isAuth]);
+    return papel === "ADMINISTRADOR";
+  }, [mounted, isAuth, papel]);
 
   const goToSearch = (term: string) => {
     const q = term.trim();
@@ -151,23 +140,10 @@ function Navbar() {
           </Link>
 
           {/* Busca (Desktop) */}
-          <form
-            onSubmit={onSubmitSearch}
-            className="hidden lg:flex flex-1 justify-center px-6"
-          >
+          <form onSubmit={onSubmitSearch} className="hidden lg:flex flex-1 justify-center px-6">
             <div className="relative w-full max-w-md">
               <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/50">
-                {/* ícone lupa */}
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.3-4.3" />
                 </svg>
@@ -184,45 +160,29 @@ function Navbar() {
 
           {/* Ações (Desktop) */}
           <nav className="hidden lg:flex items-center gap-2">
-            <Link
-              href="/biblioteca"
-              className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
-            >
+            <Link href="/biblioteca" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
               Biblioteca
             </Link>
 
-            <Link
-              href="/listas"
-              className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
-            >
+            <Link href="/listas" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
               Listas
             </Link>
 
-            {/* Admin + Sandbox somente ADMIN */}
+            {/* ✅ Admin somente ADMINISTRADOR */}
             {isAuth && isAdmin && (
               <>
-                <Link
-                  href="/admin"
-                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
-                >
+                <Link href="/admin" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
                   Admin
                 </Link>
-                <Link
-                  href="/sandbox"
-                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
-                >
+                <Link href="/sandbox" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
                   Sandbox
                 </Link>
               </>
             )}
 
-            {/* Auth actions */}
             {!isAuth ? (
               <>
-                <Link
-                  href="/login"
-                  className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition"
-                >
+                <Link href="/login" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
                   Login
                 </Link>
                 <Link
@@ -233,28 +193,17 @@ function Navbar() {
                 </Link>
               </>
             ) : (
-              // Avatar + dropdown (o mais à direita)
               <div className="relative ml-2" ref={userMenuRef}>
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen((v) => !v)}
-                  className="
-    h-10 w-10 min-w-10 aspect-square p-0 leading-none
-    !rounded-full !overflow-hidden
-    border border-[#E839C2]/60
-    bg-white/5 hover:bg-white/10
-    transition flex items-center justify-center
-  "
+                  className="h-10 w-10 min-w-10 aspect-square p-0 leading-none !rounded-full !overflow-hidden border border-[#E839C2]/60 bg-white/5 hover:bg-white/10 transition flex items-center justify-center"
                   aria-haspopup="menu"
                   aria-expanded={isUserMenuOpen}
                   title="Menu do usuário"
                 >
                   {userAvatar ? (
-                    <img
-                      src={userAvatar}
-                      alt="Perfil"
-                      className="block h-full w-full !rounded-full object-cover"
-                    />
+                    <img src={userAvatar} alt="Perfil" className="block h-full w-full !rounded-full object-cover" />
                   ) : (
                     <span className="text-[#E839C2]">
                       <DefaultAvatar />
@@ -305,14 +254,7 @@ function Navbar() {
             onClick={() => setIsDrawerOpen(true)}
             aria-label="Abrir menu"
           >
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -322,14 +264,12 @@ function Navbar() {
       {/* Drawer Mobile */}
       {isDrawerOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
-          {/* overlay */}
           <button
             className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
             onClick={() => setIsDrawerOpen(false)}
             aria-label="Fechar menu"
           />
 
-          {/* painel */}
           <aside className="absolute right-0 top-0 h-full w-[85%] max-w-sm border-l border-white/10 bg-[#0D1117]/95 backdrop-blur-md shadow-2xl">
             <div className="flex items-center justify-between px-5 h-20 border-b border-white/10">
               <span className="text-white font-semibold">Menu</span>
@@ -338,14 +278,7 @@ function Navbar() {
                 className="rounded-full p-2 text-white/90 hover:bg-white/5 transition"
                 aria-label="Fechar"
               >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" d="M18 6 6 18M6 6l12 12" />
                 </svg>
               </button>
@@ -397,6 +330,7 @@ function Navbar() {
                   Listas
                 </Link>
 
+                {/* ✅ Admin somente ADMINISTRADOR */}
                 {isAuth && isAdmin && (
                   <>
                     <Link
@@ -441,12 +375,7 @@ function Navbar() {
                     <div className="flex items-center gap-3 px-2">
                       <div className="h-10 w-10 overflow-hidden rounded-full border border-[#E839C2]/60 bg-white/5 flex items-center justify-center">
                         {userAvatar ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={userAvatar}
-                            alt="Perfil"
-                            className="h-full w-full object-cover"
-                          />
+                          <img src={userAvatar} alt="Perfil" className="h-full w-full object-cover" />
                         ) : (
                           <span className="text-[#E839C2]">
                             <DefaultAvatar />
@@ -471,6 +400,7 @@ function Navbar() {
                     >
                       Configurações
                     </Link>
+
                     <button
                       onClick={() => {
                         setIsDrawerOpen(false);
@@ -488,7 +418,6 @@ function Navbar() {
         </div>
       )}
 
-      {/* Espaçador */}
       <div className="h-20" />
     </>
   );

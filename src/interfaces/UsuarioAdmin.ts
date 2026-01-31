@@ -5,4 +5,5 @@ export interface UsuarioAdmin {
   nome: string;
   email: string;
   papel: PapelUsuario;
+  avatarImagem?: string;
 }

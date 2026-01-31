@@ -10,6 +10,7 @@ export interface LoginDTO {
 export interface LoginResponse {
   token: string;
   tipo: string;
+  papel: string; // ✅ Adicionado para bater com o Backend
 }
 
 // Tipagem do Cadastro
@@ -25,10 +26,15 @@ export const authService = {
     // POST /auth/login
     const response = await api.post<LoginResponse>("/auth/login", dados);
 
-    // Se deu certo, salvamos o token
+    // Se deu certo, salvamos o token e o papel
     if (response.data.token) {
       localStorage.setItem("gamelog_token", response.data.token);
-      localStorage.setItem("gamelog_user_email", dados.email); // Opcional: salvar email
+      localStorage.setItem("gamelog_user_email", dados.email); 
+      
+      // ✅ Salva o papel (role) se vier na resposta
+      if (response.data.papel) {
+        localStorage.setItem("gamelog_user_role", response.data.papel);
+      }
     }
     return response.data;
   },
@@ -43,10 +49,11 @@ export const authService = {
   logout: () => {
     localStorage.removeItem("gamelog_token");
     localStorage.removeItem("gamelog_user_email");
-    window.location.href = "/login"; // Redireciona forçado para login
+    localStorage.removeItem("gamelog_user_role"); // ✅ Limpa o papel também
+    window.location.href = "/login"; 
   },
 
-  // ADICIONE ESTA FUNÇÃO:
+  // Retorna o papel salvo (ex: "ADMINISTRADOR")
   getRole: (): string | null => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("gamelog_user_role");
@@ -54,14 +61,16 @@ export const authService = {
     return null;
   },
 
-  // no authService.ts (adicione isso dentro do authService)
+  // Obtém o ID do usuário (usando o perfilService como auxiliar)
   getUsuarioId: async (): Promise<string | null> => {
     if (!authService.isAuthenticated()) return null;
     try {
       const perfil = await (
         await import("./perfilService")
       ).perfilService.getMeuPerfil();
-      return String((perfil as any).id);
+      // O perfil geralmente tem { id: ..., usuarioId: ... }
+      // Ajuste conforme seu DTO de perfil
+      return String((perfil as any).usuarioId || (perfil as any).id);
     } catch {
       return null;
     }
