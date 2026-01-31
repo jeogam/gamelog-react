@@ -15,11 +15,13 @@ type Props = {
   jogoId: string;
 };
 
-function StarsView({ value }: { value: number }) {
+// Pequeno ajuste para aceitar números quebrados se quiser (opcional), 
+// mas mantendo simples com arredondamento para exibição das estrelas.
+function StarsView({ value, className }: { value: number, className?: string }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className={`flex items-center gap-1 ${className}`}>
       {Array.from({ length: 5 }, (_, i) => {
-        const filled = i + 1 <= value;
+        const filled = i + 1 <= Math.round(value); // Arredonda para preencher a estrela
         return (
           <Star
             key={i}
@@ -76,6 +78,11 @@ export default function AvaliacaoSection({ jogoId }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoResponseDTO[]>([]);
 
+  // 1. Calcula a média baseada nas avaliações carregadas
+  const media = avaliacoes.length
+    ? avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length
+    : 0;
+
   async function loadUsuario() {
     try {
       const perfil = await perfilService.getMeuPerfil();
@@ -117,10 +124,25 @@ export default function AvaliacaoSection({ jogoId }: Props) {
 
       {/* LISTAGEM */}
       <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-zinc-100">
-            Avaliações de outros usuários
-          </h3>
+        
+        {/* CABEÇALHO DA LISTA (Com a Média) */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <h3 className="text-base font-semibold text-zinc-100">
+              Avaliações da comunidade
+            </h3>
+
+            {/* 2. Exibe a média se houver avaliações */}
+            {!loading && avaliacoes.length > 0 && (
+              <div className="flex items-center gap-2 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1">
+                <span className="text-sm font-bold text-yellow-500">
+                  {media.toFixed(1)}
+                </span>
+                <StarsView value={media} />
+              </div>
+            )}
+          </div>
+
           <span className="text-sm text-zinc-400">
             {avaliacoes.length} {avaliacoes.length === 1 ? "avaliação" : "avaliações"}
           </span>
