@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react"; 
 
 import { perfilService } from "@/services/perfilService";
 import {
   listarAvaliacoesDoJogo,
+  removerAvaliacao, 
   AvaliacaoResponseDTO,
 } from "@/services/avaliacaoService";
 import AvaliacaoForm from "@/components/AvaliacaoForm";
@@ -15,13 +16,11 @@ type Props = {
   jogoId: string;
 };
 
-// Pequeno ajuste para aceitar números quebrados se quiser (opcional), 
-// mas mantendo simples com arredondamento para exibição das estrelas.
-function StarsView({ value, className }: { value: number, className?: string }) {
+function StarsView({ value }: { value: number }) {
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <div className="flex items-center gap-1">
       {Array.from({ length: 5 }, (_, i) => {
-        const filled = i + 1 <= Math.round(value); // Arredonda para preencher a estrela
+        const filled = i + 1 <= Math.round(value);
         return (
           <Star
             key={i}
@@ -73,26 +72,29 @@ function Avatar({
 
 export default function AvaliacaoSection({ jogoId }: Props) {
   const [usuarioId, setUsuarioId] = useState<string | undefined>(undefined);
+  const [userRole, setUserRole] = useState<string>("USUARIO"); 
 
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [avaliacoes, setAvaliacoes] = useState<AvaliacaoResponseDTO[]>([]);
 
-  // 1. Calcula a média baseada nas avaliações carregadas
-  const media = avaliacoes.length
-    ? avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length
-    : 0;
-
+  // 1. Carrega usuário e papel
   async function loadUsuario() {
     try {
       const perfil = await perfilService.getMeuPerfil();
       const uid = (perfil as any)?.usuarioId;
-      if (uid) setUsuarioId(String(uid));
+      const papel = (perfil as any)?.papel || "USUARIO"; // ✅ Pega o papel do backend
+      
+      if (uid) {
+        setUsuarioId(String(uid));
+        setUserRole(papel);
+      }
     } catch {
       setUsuarioId(undefined);
     }
   }
 
+  // 2. Carrega avaliações
   async function loadAvaliacoes() {
     if (!jogoId) return;
     setErro(null);
@@ -108,6 +110,19 @@ export default function AvaliacaoSection({ jogoId }: Props) {
     }
   }
 
+  // ✅ 3. Função de Deletar
+  async function handleDelete(avaliacaoId: string) {
+    if (!confirm("Tem certeza que deseja excluir esta avaliação?")) return;
+    
+    try {
+      await removerAvaliacao(avaliacaoId);
+      // Remove da lista localmente para atualização instantânea
+      setAvaliacoes((prev) => prev.filter((av) => av.id !== avaliacaoId));
+    } catch (error: any) {
+      alert(error?.response?.data?.message || "Erro ao excluir avaliação.");
+    }
+  }
+
   useEffect(() => {
     loadUsuario();
   }, []);
@@ -117,22 +132,37 @@ export default function AvaliacaoSection({ jogoId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jogoId]);
 
+  // Encontra minha avaliação para preencher o formulário
+  const minhaAvaliacao = useMemo(() => {
+    if (!usuarioId) return undefined;
+    return avaliacoes.find((a) => String(a.usuarioId) === String(usuarioId));
+  }, [avaliacoes, usuarioId]);
+
+  const media = avaliacoes.length
+    ? avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length
+    : 0;
+
+  // ✅ Verifica permissão especial
+  const isModerator = userRole === "ADMINISTRADOR" || userRole === "MODERADOR";
+
   return (
     <section className="space-y-4">
-      {/* FORM */}
-      <AvaliacaoForm jogoId={jogoId} usuarioId={usuarioId} onSuccess={loadAvaliacoes} />
+      {/* FORM: Recebe minha avaliação para edição, se existir */}
+      <AvaliacaoForm 
+        jogoId={jogoId} 
+        usuarioId={usuarioId} 
+        avaliacaoExistente={minhaAvaliacao} 
+        onSuccess={loadAvaliacoes} 
+      />
 
       {/* LISTAGEM */}
       <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
         
-        {/* CABEÇALHO DA LISTA (Com a Média) */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <h3 className="text-base font-semibold text-zinc-100">
               Avaliações da comunidade
             </h3>
-
-            {/* 2. Exibe a média se houver avaliações */}
             {!loading && avaliacoes.length > 0 && (
               <div className="flex items-center gap-2 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1">
                 <span className="text-sm font-bold text-yellow-500">
@@ -142,7 +172,6 @@ export default function AvaliacaoSection({ jogoId }: Props) {
               </div>
             )}
           </div>
-
           <span className="text-sm text-zinc-400">
             {avaliacoes.length} {avaliacoes.length === 1 ? "avaliação" : "avaliações"}
           </span>
@@ -162,16 +191,23 @@ export default function AvaliacaoSection({ jogoId }: Props) {
           <div className="mt-4 space-y-3">
             {avaliacoes.map((av) => {
               const nome = av.nomeExibicao?.trim() || "Usuário";
+              const isMe = String(av.usuarioId) === String(usuarioId);
               const data = av.createdAt
                 ? new Date(av.createdAt).toLocaleDateString("pt-BR")
                 : null;
 
+              // ✅ Regra de Visualização do Botão
+              const podeExcluir = isMe || isModerator;
+
               return (
                 <div
                   key={av.id}
-                  className="rounded-xl border border-white/10 bg-zinc-950/30 p-4"
+                  className={`rounded-xl border p-4 ${
+                    isMe 
+                      ? "border-indigo-500/30 bg-indigo-500/10" 
+                      : "border-white/10 bg-zinc-950/30"
+                  }`}
                 >
-                  {/* topo: autor + data */}
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <Link
                       href={`/perfil/${av.usuarioId}`}
@@ -180,18 +216,30 @@ export default function AvaliacaoSection({ jogoId }: Props) {
                       <Avatar src={av.avatarImagem} alt={nome} size={36} />
                       <div className="leading-tight">
                         <div className="text-sm font-semibold text-zinc-100 group-hover:underline">
-                          {nome}
+                          {nome} {isMe && <span className="text-zinc-500">(Você)</span>}
                         </div>
                         <div className="text-xs text-zinc-500">Ver perfil</div>
                       </div>
                     </Link>
 
-                    {data ? (
-                      <div className="text-right text-xs text-zinc-500">{data}</div>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                      {data && (
+                        <div className="text-right text-xs text-zinc-500">{data}</div>
+                      )}
+                      
+                      {/* ✅ BOTÃO DE EXCLUIR */}
+                      {podeExcluir && (
+                        <button
+                          onClick={() => handleDelete(av.id)}
+                          className="ml-2 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                          title="Excluir avaliação"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* conteúdo */}
                   <div className="space-y-2">
                     <StarsView value={av.nota} />
                     <p className="text-sm text-zinc-200 whitespace-pre-wrap">

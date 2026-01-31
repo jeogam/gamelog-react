@@ -12,6 +12,8 @@ export interface Perfil {
     reviews?: number;
     listas?: number;
   };
+
+  papel?: "ADMINISTRADOR" | "USUARIO" | "MODERADOR";
 }
 
 export interface PerfilUpdateDTO {

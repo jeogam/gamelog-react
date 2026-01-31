@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Star } from "lucide-react";
-import { criarAvaliacao } from "@/services/avaliacaoService";
+import { criarAvaliacao, atualizarAvaliacao, AvaliacaoResponseDTO } from "@/services/avaliacaoService";
 
 type AvaliacaoFormProps = {
   jogoId: string;
   usuarioId?: string;
+  avaliacaoExistente?: AvaliacaoResponseDTO; // ✅ Recebe a avaliação para editar
   className?: string;
   onSuccess?: () => void;
 };
@@ -14,10 +15,12 @@ type AvaliacaoFormProps = {
 export default function AvaliacaoForm({
   jogoId,
   usuarioId,
+  avaliacaoExistente,
   className,
   onSuccess,
 }: AvaliacaoFormProps) {
   const isAutenticado = Boolean(usuarioId);
+  const isEdicao = Boolean(avaliacaoExistente); // ✅ Detecta se é edição
 
   const [nota, setNota] = useState<number>(0);
   const [hoverNota, setHoverNota] = useState<number>(0);
@@ -26,6 +29,17 @@ export default function AvaliacaoForm({
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
+
+  // ✅ Preenche os campos automaticamente se for edição
+  useEffect(() => {
+    if (avaliacaoExistente) {
+      setNota(avaliacaoExistente.nota);
+      setComentario(avaliacaoExistente.comentario || "");
+    } else {
+      setNota(0);
+      setComentario("");
+    }
+  }, [avaliacaoExistente]);
 
   const notaVisivel = hoverNota || nota;
   const charsRestantes = useMemo(() => 500 - comentario.length, [comentario]);
@@ -59,28 +73,30 @@ export default function AvaliacaoForm({
     try {
       setLoading(true);
 
-      await criarAvaliacao({
-        nota,
-        comentario: comentarioLimpo,
-        usuarioId: usuarioId!, // já validamos acima
-        jogoId,
-      });
-
-      setSucesso("Avaliação enviada com sucesso!");
-      setNota(0);
-      setHoverNota(0);
-      setComentario("");
+      if (isEdicao && avaliacaoExistente) {
+        // ✅ ATUALIZAÇÃO (PUT)
+        await atualizarAvaliacao(avaliacaoExistente.id, {
+          nota,
+          comentario: comentarioLimpo,
+        });
+        setSucesso("Sua avaliação foi atualizada!");
+      } else {
+        // ✅ CRIAÇÃO (POST)
+        await criarAvaliacao({
+          nota,
+          comentario: comentarioLimpo,
+          usuarioId: usuarioId!,
+          jogoId,
+        });
+        setSucesso("Avaliação enviada com sucesso!");
+        if (!isEdicao) {
+          setNota(0);
+          setComentario("");
+        }
+      }
+      
       onSuccess?.();
     } catch (err: any) {
-      console.log("STATUS:", err?.response?.status);
-      console.log("DATA:", err?.response?.data);
-      console.log("PAYLOAD:", {
-        nota,
-        comentario: comentarioLimpo,
-        usuarioId,
-        jogoId,
-      });
-
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
@@ -99,12 +115,15 @@ export default function AvaliacaoForm({
       ].join(" ")}
     >
       <header className="mb-4">
+        {/* Muda o título dependendo do modo */}
         <h3 className="text-base font-semibold text-zinc-100">
-          Deixe sua avaliação
+          {isEdicao ? "Sua avaliação (Edição)" : "Deixe sua avaliação"}
         </h3>
         <p className="mt-1 text-sm text-zinc-400">
           {isAutenticado
-            ? "Dê uma nota e conte o que achou."
+            ? isEdicao 
+                ? "Edite sua nota e comentário abaixo."
+                : "Dê uma nota e conte o que achou."
             : "Faça login para avaliar este jogo."}
         </p>
       </header>
@@ -195,17 +214,17 @@ export default function AvaliacaoForm({
         </div>
 
         {/* Feedback */}
-        {erro ? (
+        {erro && (
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
             {erro}
           </p>
-        ) : null}
+        )}
 
-        {sucesso ? (
+        {sucesso && (
           <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
             {sucesso}
           </p>
-        ) : null}
+        )}
 
         {/* Submit */}
         <div className="flex items-center gap-3">
@@ -219,14 +238,12 @@ export default function AvaliacaoForm({
                 : "bg-indigo-600 text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60",
             ].join(" ")}
           >
-            {loading ? "Enviando..." : "Enviar avaliação"}
+            {loading 
+              ? "Enviando..." 
+              : isEdicao 
+                ? "Salvar alterações" 
+                : "Enviar avaliação"}
           </button>
-
-          <span className="text-xs text-zinc-500">
-            {isAutenticado
-              ? "Sua avaliação aparecerá no jogo."
-              : "Entre para avaliar."}
-          </span>
         </div>
       </form>
     </section>
