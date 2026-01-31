@@ -164,10 +164,6 @@ function Navbar() {
               Biblioteca
             </Link>
 
-            <Link href="/listas" className="rounded-full px-4 py-2 text-sm text-white/90 hover:text-white hover:bg-white/5 transition">
-              Listas
-            </Link>
-
             {/* ✅ Admin somente ADMINISTRADOR */}
             {isAuth && isAdmin && (
               <>
@@ -321,13 +317,6 @@ function Navbar() {
                   className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
                 >
                   Biblioteca
-                </Link>
-                <Link
-                  href="/listas"
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="block rounded-2xl px-4 py-3 text-white/90 hover:bg-white/5 transition"
-                >
-                  Listas
                 </Link>
 
                 {/* ✅ Admin somente ADMINISTRADOR */}
