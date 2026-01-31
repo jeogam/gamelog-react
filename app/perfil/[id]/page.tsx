@@ -1,3 +1,5 @@
+//perfil/[id]/page.tsx perfil público
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";

@@ -83,7 +83,7 @@ export default function AvaliacaoSection({ jogoId }: Props) {
     try {
       const perfil = await perfilService.getMeuPerfil();
       const uid = (perfil as any)?.usuarioId;
-      const papel = (perfil as any)?.papel || "USUARIO"; // ✅ Pega o papel do backend
+      const papel = (perfil as any)?.papel || "USUARIO"; 
       
       if (uid) {
         setUsuarioId(String(uid));
@@ -142,8 +142,8 @@ export default function AvaliacaoSection({ jogoId }: Props) {
     ? avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length
     : 0;
 
-  // ✅ Verifica permissão especial
-  const isModerator = userRole === "ADMINISTRADOR" || userRole === "MODERADOR";
+  // ✅ Verifica permissão especial (Admin ou Moderador)
+  const isStaff = userRole === "ADMINISTRADOR" || userRole === "MODERADOR";
 
   return (
     <section className="space-y-4">
@@ -196,8 +196,8 @@ export default function AvaliacaoSection({ jogoId }: Props) {
                 ? new Date(av.createdAt).toLocaleDateString("pt-BR")
                 : null;
 
-              // ✅ Regra de Visualização do Botão
-              const podeExcluir = isMe || isModerator;
+              // ✅ Regra de Visualização: Se é o dono OU se é Staff (Moderador/Admin)
+              const podeExcluir = isMe || isStaff;
 
               return (
                 <div
@@ -227,12 +227,12 @@ export default function AvaliacaoSection({ jogoId }: Props) {
                         <div className="text-right text-xs text-zinc-500">{data}</div>
                       )}
                       
-                      {/* ✅ BOTÃO DE EXCLUIR */}
+                      {/* ✅ BOTÃO DE EXCLUIR CONDICIONAL */}
                       {podeExcluir && (
                         <button
                           onClick={() => handleDelete(av.id)}
                           className="ml-2 rounded-lg p-1 text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-500"
-                          title="Excluir avaliação"
+                          title={isMe ? "Excluir minha avaliação" : "Excluir como Moderador"}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
