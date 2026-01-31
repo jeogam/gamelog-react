@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import type { Perfil } from "@/interfaces/Perfil";
 import { perfilService } from "@/services/perfilService";
+import { perfilStatsService } from "@/services/perfilStatsService";
 import PerfilView from "@/components/PerfilView";
 
 export default function PerfilPublicoPage() {
@@ -23,16 +24,25 @@ export default function PerfilPublicoPage() {
       setErro(null);
 
       try {
-        // tenta pegar meu perfil (se estiver logado) só pra comparar ids
-        try {
-          const meu = await perfilService.getMeuPerfil();
-          setMeuUsuarioId(meu.usuarioId);
-        } catch {
-          setMeuUsuarioId(null);
-        }
+        const meuPerfilPromise = perfilService
+          .getMeuPerfil()
+          .then((meu) => {
+            setMeuUsuarioId(meu.usuarioId);
+            return meu;
+          })
+          .catch(() => {
+            setMeuUsuarioId(null);
+            return null;
+          });
 
-        const publico = await perfilService.getPerfilPublico(String(usuarioId));
-        setPerfil(publico);
+        const [_, publico, statsResult] = await Promise.all([
+          meuPerfilPromise,
+          perfilService.getPerfilPublico(String(usuarioId)),
+          perfilStatsService.getStatsByUsuarioId(String(usuarioId)),
+        ]);
+
+        // ✅ injeta stats no perfil (PerfilView já lê perfil.stats)
+        setPerfil({ ...publico, stats: statsResult });
       } catch (e: any) {
         setErro(e?.response?.data?.message || "Não foi possível carregar o perfil.");
         setPerfil(null);
@@ -44,7 +54,10 @@ export default function PerfilPublicoPage() {
     load();
   }, [usuarioId]);
 
-  const isMeuPerfil = Boolean(meuUsuarioId && usuarioId && meuUsuarioId === usuarioId);
+  const isMeuPerfil = useMemo(
+    () => Boolean(meuUsuarioId && usuarioId && String(meuUsuarioId) === String(usuarioId)),
+    [meuUsuarioId, usuarioId]
+  );
 
   return (
     <div className="min-h-screen pb-10">

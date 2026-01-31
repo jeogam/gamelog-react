@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { perfilService } from "@/services/perfilService";
+import { perfilStatsService } from "@/services/perfilStatsService";
 import type { Perfil } from "@/interfaces/Perfil";
 import PerfilView from "@/components/PerfilView";
 
@@ -11,11 +12,24 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    perfilService
-      .getMeuPerfil()
-      .then(setPerfil)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    async function load() {
+      setLoading(true);
+      try {
+        const meu = await perfilService.getMeuPerfil();
+
+        const stats = await perfilStatsService.getStatsByUsuarioId(String(meu.usuarioId));
+
+        // ✅ injeta stats no perfil (PerfilView já lê perfil.stats)
+        setPerfil({ ...meu, stats });
+      } catch (e) {
+        console.error(e);
+        setPerfil(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
   }, []);
 
   return (
