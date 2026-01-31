@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react"; // <--- Importe o Suspense
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, Heart, Globe } from "lucide-react"; // Use Globe
+import { ChevronLeft, Heart, Globe } from "lucide-react";
 
 import { bibliotecaService, BibliotecaResponseDTO } from "@/services/bibliotecaService";
 import { perfilService } from "@/services/perfilService";
 import GameCard from "@/components/GameCard";
 import GameCardSkeleton from "@/components/GameCardSkeleton";
 
-export default function FavoritosPage() {
+// 1. Componente INTERNO com a lógica (usa useSearchParams)
+function FavoritosContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // <--- Fica aqui dentro
   
   const uidParam = searchParams.get("uid");
 
@@ -77,7 +78,6 @@ export default function FavoritosPage() {
         </div>
         
         <div className="flex items-center gap-3 mt-2">
-          {/* ✅ MUDANÇA AQUI: Label Pública com ícone Globe */}
           <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-500 flex items-center gap-1">
             <Globe size={10} /> LISTA PÚBLICA
           </span>
@@ -118,5 +118,20 @@ export default function FavoritosPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// 2. Componente PRINCIPAL (exportado) com o Suspense
+export default function FavoritosPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="p-8 text-center text-zinc-500">
+           Carregando favoritos...
+        </div>
+      }
+    >
+      <FavoritosContent />
+    </Suspense>
   );
 }
